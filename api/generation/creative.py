@@ -4,11 +4,9 @@ import json
 import logging
 import os
 
-import anthropic
-
 logger = logging.getLogger(__name__)
 
-_claude = anthropic.Anthropic()
+from ..claude_local import local_claude as _claude
 
 _SYSTEM = """You are an expert ad copywriter specialising in conversational AI placements
 (ChatGPT-style in-chat sponsored answers). You write variants that are crisp, benefit-led,

@@ -1,10 +1,12 @@
-"""Emotion prediction from neural region scores.
+"""Emotion prediction from neural region scores and RoBERTa GoEmotions.
 
 Maps (language, visual, prefrontal) activation → emotion label.
 
 Based on: valence/arousal research (Russell 1980) + known fMRI correlates.
 Post-hack: replace profile vectors with NAPS/IAPS-trained MLP.
 """
+
+from __future__ import annotations
 
 import numpy as np
 
@@ -78,14 +80,17 @@ def compute_counterfactual_hint(
     target: str,
     region_scores: dict[str, float],
     threshold: float = 0.12,
+    saliency_hint: str = "",
 ) -> str:
     """Return a copy-editing hint that closes the emotion gap.
 
     This is the counterfactual step: find which region is most under-activated
     relative to the target profile, translate to generator guidance.
+    If saliency_hint is provided (from gradient attribution), it is appended
+    for richer token-level guidance.
     """
     if target not in EMOTION_PROFILES:
-        return ""
+        return saliency_hint
 
     profile = EMOTION_PROFILES[target]
     gaps = {
@@ -96,9 +101,28 @@ def compute_counterfactual_hint(
     # Only suggest changes for significant gaps
     meaningful = [(r, g) for r, g in gaps.items() if g > threshold]
     if not meaningful:
-        return ""
+        return saliency_hint
 
     # Sort by largest gap first
     meaningful.sort(key=lambda x: -x[1])
     hints = [_COPY_GUIDANCE[r] for r, _ in meaningful[:2]]
-    return "; ".join(hints)
+    region_hint = "; ".join(hints)
+
+    if saliency_hint:
+        return f"{region_hint}\n\n{saliency_hint}"
+    return region_hint
+
+
+def classify_text_emotion(
+    text: str,
+    scorer: "GoEmotionScorer",  # type: ignore[name-defined]  # noqa: F821
+) -> tuple[str, float]:
+    """RoBERTa-based emotion prediction mapped to our 5 EMOTION_PROFILES.
+
+    Returns (profile_label, confidence) using GoEmotions sigmoid scores
+    aggregated via PROFILE_TO_GOEMOTION weights in GoEmotionScorer.
+    Falls back to predict_emotion({}) placeholder when scorer is unavailable.
+    """
+    if scorer is None or not scorer.is_available():
+        return "aspirational", 0.5
+    return scorer.predict(text)

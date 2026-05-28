@@ -23,8 +23,14 @@
     body {
       font-family: 'Inter', sans-serif;
       background: var(--bg);
+      background-image: radial-gradient(circle, rgba(26,24,22,0.13) 1.2px, transparent 1.2px);
+      background-size: 26px 26px;
       color: var(--text);
       overflow-x: hidden;
+    }
+
+    body.dark-mode {
+      background-image: radial-gradient(circle, rgba(255,255,255,0.09) 1.2px, transparent 1.2px);
     }
 
     canvas#brainCanvas {
@@ -42,15 +48,16 @@
       position: fixed; top: 0; left: 0; width: 100%; z-index: 100;
       padding: 24px 48px;
       display: flex; justify-content: space-between; align-items: center;
-      mix-blend-mode: difference;
     }
-    nav .logo {
+    .logo {
       font-family: 'Space Grotesk', sans-serif; font-weight: 700;
-      font-size: 22px; color: #fff; letter-spacing: -0.8px;
+      font-size: 22px; letter-spacing: -0.8px;
+      display: flex; align-items: center; gap: 11px;
+      color: var(--text);
     }
     nav .nav-links { display: flex; gap: 32px; margin-right: 60px; }
     nav .nav-links a {
-      color: #fff; text-decoration: none;
+      color: var(--text); text-decoration: none;
       font-size: 13px; font-weight: 400; letter-spacing: 0.5px; text-transform: uppercase;
     }
 
@@ -380,85 +387,133 @@
     .overlay-results { display: none; margin-top: 56px; padding-top: 48px; border-top: 1px solid var(--border); }
     .overlay-results.show { display: block; }
 
-    .result-hero-img {
-      width: 100%; aspect-ratio: 16/7; object-fit: cover;
-      border-radius: 2px; margin-bottom: 24px; display: block;
+    /* ── AD PREVIEW CARDS ── */
+    .ad-compare { display: grid; grid-template-columns: 1fr 56px 1fr; gap: 0; align-items: start; margin-bottom: 40px; }
+    .ad-compare-arrow {
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      padding-top: 80px; color: var(--text-secondary); font-size: 20px;
+    }
+    .ad-compare-arrow .delta {
+      font-family: 'Space Grotesk', sans-serif; font-size: 11px; font-weight: 700;
+      margin-top: 4px; text-align: center;
+    }
+    .delta.positive { color: #5fa832; }
+    .delta.negative { color: #c04040; }
+
+    .ad-preview-wrap { display: flex; flex-direction: column; gap: 0; }
+    .ad-preview-label {
+      font-size: 10px; text-transform: uppercase; letter-spacing: 2.5px;
+      color: var(--text-secondary); font-weight: 600; margin-bottom: 10px;
+    }
+    .ad-preview-label.refined { color: var(--accent); }
+
+    .ad-preview {
+      background: #fff; border-radius: 3px; overflow: hidden;
+      border: 1px solid var(--border);
+      box-shadow: 0 2px 16px rgba(0,0,0,0.06);
+      transition: box-shadow 0.2s;
+    }
+    body.dark-mode .ad-preview { background: #1e1e1e; }
+    .ad-preview.winner { box-shadow: 0 4px 32px rgba(236,82,27,0.15); border-color: rgba(236,82,27,0.3); }
+
+    .ad-visual {
+      width: 100%; aspect-ratio: 6/4; overflow: hidden;
+      background: linear-gradient(135deg, var(--light), var(--bg));
+      display: flex; align-items: center; justify-content: center;
+    }
+    .ad-visual img, .ad-visual svg { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .ad-visual-placeholder {
+      font-size: 11px; color: var(--text-secondary); letter-spacing: 1px; text-transform: uppercase;
     }
 
-    .strategy-block {
-      padding: 20px 24px; background: var(--light);
-      border-left: 3px solid var(--accent); border-radius: 2px;
-      margin-bottom: 28px;
+    .ad-copy { padding: 16px 18px 14px; }
+    .ad-copy-headline {
+      font-family: 'Space Grotesk', sans-serif; font-size: 15px;
+      font-weight: 700; letter-spacing: -0.3px; line-height: 1.25; margin-bottom: 6px;
+      color: var(--text);
     }
-    .strategy-block-label {
-      font-size: 10px; text-transform: uppercase; letter-spacing: 2px;
-      color: var(--accent); font-weight: 600; margin-bottom: 10px;
+    .ad-copy-body { font-size: 12px; color: var(--text-secondary); line-height: 1.6; margin-bottom: 10px; }
+    .ad-copy-footer { display: flex; align-items: center; justify-content: space-between; }
+    .ad-copy-cta {
+      font-size: 11px; font-weight: 700; color: #fff;
+      background: var(--accent); padding: 5px 12px; border-radius: 2px;
+      text-transform: uppercase; letter-spacing: 0.5px;
     }
-    .strategy-block-text { font-size: 13px; color: var(--text-secondary); line-height: 1.7; }
-
-    .results-grid { display: flex; flex-direction: column; gap: 12px; }
-
-    .result-card {
-      background: var(--light); border-radius: 2px;
-      padding: 20px; cursor: pointer;
-      border: 1px solid transparent; transition: border-color 0.2s;
+    .ad-score-pill {
+      font-family: 'Space Grotesk', sans-serif; font-size: 11px; font-weight: 600;
+      padding: 3px 8px; border-radius: 10px; background: var(--light);
+      color: var(--text-secondary);
     }
-    .result-card:hover { border-color: var(--border); }
-    .result-card.selected { border-color: var(--accent); }
-    .result-card.winner { border-color: rgba(236,82,27,0.3); }
+    .ad-score-pill.good { background: rgba(95,168,50,0.1); color: #5fa832; }
+    .ad-score-pill.mid  { background: rgba(196,168,62,0.1); color: #c4a83e; }
+    .ad-score-pill.low  { background: rgba(196,98,62,0.1);  color: #c4623e; }
 
-    .card-badges { display: flex; gap: 6px; margin-bottom: 10px; }
-    .badge {
-      font-size: 10px; font-weight: 600; letter-spacing: 0.8px;
-      text-transform: uppercase; padding: 3px 8px; border-radius: 2px;
+    /* Emotion + region mini bars below ad */
+    .ad-meta { padding: 10px 18px 14px; border-top: 1px solid var(--border); }
+    .ad-meta-emotion {
+      font-size: 11px; color: var(--text-secondary); margin-bottom: 8px;
+      display: flex; gap: 6px; align-items: center; flex-wrap: wrap;
     }
-    .badge-winner { background: rgba(236,82,27,0.1); color: var(--accent); }
-    .badge-flag   { background: rgba(200,50,50,0.08); color: #b03030; }
-    body.dark-mode .badge-flag { background: rgba(200,50,50,0.15); }
-
-    .card-score-row { display: flex; align-items: baseline; gap: 8px; margin-bottom: 8px; }
-    .card-score {
-      font-family: 'Space Grotesk', sans-serif; font-size: 36px;
-      font-weight: 700; line-height: 1;
+    .emotion-tag {
+      font-size: 10px; font-weight: 600; text-transform: capitalize;
+      padding: 2px 7px; border-radius: 10px;
+      background: rgba(236,82,27,0.08); color: var(--accent);
     }
-    .card-score-suffix { font-size: 13px; color: var(--text-secondary); }
-    .card-model-scores { font-size: 11px; color: var(--text-secondary); margin-bottom: 10px; }
-    .card-headline {
-      font-family: 'Space Grotesk', sans-serif; font-size: 16px;
-      font-weight: 600; letter-spacing: -0.3px; margin-bottom: 6px;
-    }
-    .card-body { font-size: 13px; color: var(--text-secondary); line-height: 1.6; margin-bottom: 8px; }
-    .card-cta  { font-size: 12px; font-weight: 600; color: var(--accent); text-transform: uppercase; letter-spacing: 0.5px; }
-
-    .card-emotion-row { display: flex; align-items: center; gap: 6px; margin-top: 10px; flex-wrap: wrap; }
-    .predicted-emotion { font-size: 11px; font-weight: 600; color: var(--accent); text-transform: capitalize; }
-    .emotion-match { font-size: 11px; color: var(--text-secondary); }
-
-    .cf-hint {
-      margin-top: 10px; padding: 8px 12px;
-      background: rgba(236,82,27,0.05); border-left: 2px solid var(--accent);
-      border-radius: 2px;
-    }
-    .cf-hint-label { font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: var(--accent); font-weight: 600; }
-    .cf-hint-text  { font-size: 12px; color: var(--text-secondary); line-height: 1.5; margin-top: 4px; }
-
-    .region-bars { display: flex; flex-direction: column; gap: 6px; margin-top: 12px; }
-    .region-bar-row { display: flex; align-items: center; gap: 8px; }
-    .region-bar-label { font-size: 11px; color: var(--text-secondary); width: 72px; }
-    .region-bar-track { flex: 1; height: 3px; border-radius: 2px; background: var(--border); overflow: hidden; }
-    .region-bar-fill  { height: 100%; border-radius: 2px; transition: width 0.6s ease; }
+    .region-bars { display: flex; gap: 8px; }
+    .region-bar-row { display: flex; align-items: center; gap: 4px; flex: 1; }
+    .region-bar-label { font-size: 9px; color: var(--text-secondary); width: 52px; letter-spacing: 0.5px; text-transform: uppercase; }
+    .region-bar-track { flex: 1; height: 2px; border-radius: 1px; background: var(--border); overflow: hidden; }
+    .region-bar-fill  { height: 100%; border-radius: 1px; transition: width 0.8s ease; }
     .fill-language    { background: #4a9fd4; }
     .fill-visual      { background: var(--accent); }
     .fill-prefrontal  { background: #5fa832; }
 
-    .hitl-btns { display: flex; gap: 8px; margin-top: 12px; }
-    .hitl-btn {
-      flex: 1; padding: 9px; border-radius: 2px; font-size: 12px;
-      cursor: pointer; font-family: inherit; transition: opacity 0.2s;
+    /* Strategy strip */
+    .strategy-strip {
+      padding: 16px 20px; background: var(--light);
+      border-left: 3px solid var(--accent); border-radius: 2px; margin-bottom: 24px;
     }
-    .hitl-approve { background: var(--accent); color: #fff; border: none; }
-    .hitl-reject  { background: transparent; color: var(--text-secondary); border: 1px solid var(--border); }
-    .hitl-btn:hover { opacity: 0.8; }
+    .strategy-strip-label {
+      font-size: 9px; text-transform: uppercase; letter-spacing: 2px;
+      color: var(--accent); font-weight: 600; margin-bottom: 8px;
+    }
+    .strategy-strip-text { font-size: 12px; color: var(--text-secondary); line-height: 1.65; }
+
+    /* ── TIMELINE ── */
+    .tl-wrap { display: grid; grid-template-columns: 1fr 40px 1fr; gap: 0; align-items: start; }
+    .tl-arrow { display: flex; align-items: center; justify-content: center; padding-top: 72px; font-size: 18px; color: var(--text-secondary); }
+    .tl-slot { display: flex; flex-direction: column; gap: 8px; }
+    .tl-label {
+      font-size: 10px; text-transform: uppercase; letter-spacing: 2.5px;
+      color: var(--text-secondary); font-weight: 600;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .tl-label.refined { color: var(--accent); }
+    .tl-deploy-badge {
+      background: var(--accent); color: #fff;
+      font-size: 9px; font-weight: 700; padding: 2px 7px; border-radius: 10px;
+      letter-spacing: 0.5px;
+    }
+    .tl-skeleton {
+      height: 14px; border-radius: 2px; background: var(--border);
+      margin-bottom: 8px; animation: shimmer 1.4s ease-in-out infinite;
+    }
+    .tl-sk-short { width: 60%; }
+    @keyframes shimmer {
+      0%,100% { opacity: 0.4; } 50% { opacity: 0.8; }
+    }
+
+    /* Phase progress */
+    .phase-bar {
+      display: none; gap: 0; margin-top: 16px;
+      font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase;
+      color: var(--text-secondary); align-items: center;
+    }
+    .phase-bar.show { display: flex; }
+    .phase-step { padding: 4px 10px; }
+    .phase-step.active { color: var(--accent); font-weight: 600; }
+    .phase-step.done   { color: var(--text); }
+    .phase-sep { opacity: 0.3; }
 
     /* ── RESULTS PANEL (slide in from right) ── */
     .results-panel {
@@ -550,7 +605,8 @@
 
     /* ── TEAM SECTION ── */
     .team-section {
-      padding: 80px 48px 0; border-top: 1px solid var(--border);
+      padding: 80px 48px 64px; border-top: 1px solid var(--border);
+      background: var(--bg);
     }
     .team-eyebrow {
       font-size: 10px; text-transform: uppercase; letter-spacing: 3px;
@@ -570,8 +626,13 @@
     .team-card:hover { background: rgba(0,0,0,0.02); }
     body.dark-mode .team-card:hover { background: rgba(255,255,255,0.02); }
     .team-avatar {
-      width: 64px; height: 64px; border-radius: 50%;
-      object-fit: cover; margin-bottom: 24px; filter: grayscale(15%);
+      width: 56px; height: 56px; border-radius: 50%;
+      margin-bottom: 24px;
+      background: var(--text); color: var(--bg);
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 15px; font-weight: 600; letter-spacing: 0.5px;
+      flex-shrink: 0;
     }
     .team-name {
       font-family: 'Space Grotesk', sans-serif; font-size: 20px;
@@ -582,6 +643,121 @@
 
     /* ── FOOTER ── */
 
+
+    /* ── AGENT STUDIO OVERLAY ── */
+    .studio-overlay {
+      position: fixed; inset: 0; z-index: 510;
+      background: rgba(242,237,233,0.98);
+      opacity: 0; pointer-events: none;
+      transform: translateY(16px);
+      transition: opacity 0.28s ease, transform 0.28s ease;
+      overflow-y: auto;
+    }
+    body.dark-mode .studio-overlay { background: rgba(14,14,14,0.98); }
+    .studio-overlay.open { opacity: 1; pointer-events: auto; transform: translateY(0); }
+
+    .studio-inner { max-width: 820px; margin: 0 auto; padding: 88px 48px 120px; }
+
+    .studio-heading {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 44px; font-weight: 700;
+      letter-spacing: -2px; line-height: 1.0; margin-bottom: 8px;
+    }
+    .studio-sub { font-size: 14px; color: var(--text-secondary); margin-bottom: 36px; }
+
+    .studio-mode-row { display: flex; gap: 8px; margin-bottom: 24px; }
+    .mode-pill {
+      font-size: 12px; padding: 7px 18px; border-radius: 20px;
+      border: 1px solid var(--border); background: transparent;
+      color: var(--text-secondary); cursor: pointer; font-family: 'Inter', sans-serif;
+      transition: all 0.15s;
+    }
+    .mode-pill.active { background: var(--text); color: var(--bg); border-color: var(--text); }
+
+    .studio-go {
+      margin-top: 28px; width: 100%; padding: 16px;
+      background: var(--accent); color: #fff;
+      font-family: 'Space Grotesk', sans-serif; font-size: 15px;
+      font-weight: 700; letter-spacing: 0.5px;
+      border: none; border-radius: 2px; cursor: pointer; transition: opacity 0.2s;
+    }
+    .studio-go:hover { opacity: 0.88; }
+    .studio-go:disabled { opacity: 0.45; cursor: not-allowed; }
+
+    /* Pipeline progress */
+    .pipeline-progress {
+      display: none; margin-top: 40px; padding: 20px 24px;
+      background: var(--light); border-radius: 2px;
+      flex-direction: column; gap: 0;
+    }
+    .pipeline-progress.show { display: flex; }
+    .pipeline-steps { display: flex; align-items: center; gap: 0; flex-wrap: nowrap; }
+    .pipeline-step {
+      display: flex; flex-direction: column; align-items: center; gap: 4px;
+      flex: 1; position: relative;
+    }
+    .pipeline-step:not(:last-child)::after {
+      content: ''; position: absolute; top: 10px; left: 60%; width: 80%;
+      height: 1px; background: var(--border);
+    }
+    .pipeline-step.active::after { background: var(--accent); }
+    .step-dot {
+      width: 20px; height: 20px; border-radius: 50%;
+      border: 1.5px solid var(--border); background: var(--bg);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 9px; font-weight: 700; color: var(--text-secondary);
+      transition: all 0.3s;
+    }
+    .pipeline-step.active .step-dot { border-color: var(--accent); background: var(--accent); color: #fff; }
+    .pipeline-step.done .step-dot   { border-color: var(--text); background: var(--text); color: var(--bg); }
+    .step-label { font-size: 10px; text-transform: uppercase; letter-spacing: 1.5px; color: var(--text-secondary); }
+    .pipeline-step.active .step-label { color: var(--accent); }
+    .pipeline-step.done .step-label   { color: var(--text); }
+    .pipeline-status-line { margin-top: 12px; font-size: 12px; color: var(--text-secondary); min-height: 18px; }
+
+    /* Studio results */
+    .studio-results { display: none; margin-top: 48px; }
+    .studio-results.show { display: block; }
+    .studio-result-section { margin-bottom: 40px; }
+    .studio-section-label {
+      font-size: 10px; text-transform: uppercase; letter-spacing: 2.5px;
+      color: var(--text-secondary); font-weight: 600; margin-bottom: 16px;
+    }
+
+    .ad-card {
+      background: var(--light); border-radius: 2px;
+      padding: 24px; border: 1px solid var(--border);
+    }
+    .ad-card-headline {
+      font-family: 'Space Grotesk', sans-serif; font-size: 18px;
+      font-weight: 700; letter-spacing: -0.5px; margin-bottom: 8px;
+    }
+    .ad-card-body { font-size: 14px; color: var(--text-secondary); line-height: 1.65; margin-bottom: 12px; }
+    .ad-card-cta { font-size: 12px; font-weight: 700; color: var(--accent); text-transform: uppercase; letter-spacing: 1px; }
+    .ad-card-image { margin-top: 16px; }
+    .ad-card-image img { width: 100%; max-width: 300px; height: 250px; border-radius: 2px; display: block; }
+
+    .eval-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .eval-cell {
+      background: var(--light); border-radius: 2px; padding: 16px;
+      border: 1px solid var(--border);
+    }
+    .eval-cell-label { font-size: 10px; text-transform: uppercase; letter-spacing: 1.5px; color: var(--text-secondary); font-weight: 600; margin-bottom: 6px; }
+    .eval-cell-value { font-family: 'Space Grotesk', sans-serif; font-size: 22px; font-weight: 700; }
+    .eval-cell-sub   { font-size: 11px; color: var(--text-secondary); margin-top: 2px; }
+
+    .saliency-block {
+      margin-top: 16px; padding: 16px 20px;
+      background: rgba(236,82,27,0.04); border-left: 3px solid var(--accent); border-radius: 2px;
+    }
+    .saliency-label { font-size: 10px; text-transform: uppercase; letter-spacing: 2px; color: var(--accent); font-weight: 600; margin-bottom: 8px; }
+    .saliency-text  { font-size: 12px; color: var(--text-secondary); line-height: 1.7; white-space: pre-wrap; font-family: 'Space Grotesk', sans-serif; }
+
+    .final-badge {
+      display: inline-block; padding: 3px 10px; border-radius: 20px;
+      background: var(--accent); color: #fff; font-size: 10px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px;
+    }
 
     /* ── BRAIN PULSE ── */
     @keyframes brainPulse {
@@ -612,8 +788,6 @@
 </head>
 <body>
 
-  <!-- constellation canvas — behind everything -->
-  <canvas id="constellationCanvas" style="position:fixed;inset:0;z-index:0;pointer-events:none;"></canvas>
   <div id="loadingOverlay">
     <div class="loading-spin"></div>
     <div class="loading-label">Loading neural mesh</div>
@@ -628,13 +802,15 @@
 
 
   <nav>
-    <div class="logo" style="display:flex;align-items:center;gap:9px;">
-      <svg width="20" height="15" viewBox="0 0 36 28" fill="none" style="flex-shrink:0;opacity:0.9;">
-        <path d="M18 3 C13 3 8 6 7 10 C6 14 7 18 10 21 C12 23 15 24 18 24" stroke="white" stroke-width="2.2" stroke-linecap="round" fill="none"/>
-        <path d="M18 3 C23 3 28 6 29 10 C30 14 29 18 26 21 C24 23 21 24 18 24" stroke="white" stroke-width="2.2" stroke-linecap="round" fill="none"/>
-        <path d="M18 4.5 L18 22.5" stroke="white" stroke-width="1" stroke-dasharray="2.5 2.5" opacity="0.4"/>
-        <path d="M9 12 C10.5 10 13 11 12.5 13.5" stroke="white" stroke-width="1.2" stroke-linecap="round" fill="none" opacity="0.5"/>
-        <path d="M27 12 C25.5 10 23 11 23.5 13.5" stroke="white" stroke-width="1.2" stroke-linecap="round" fill="none" opacity="0.5"/>
+    <div class="logo">
+      <svg width="28" height="28" viewBox="0 0 28 28" fill="none" style="flex-shrink:0;">
+        <rect width="28" height="28" rx="3.5" fill="#EC521B"/>
+        <rect x="3.5" y="5"   width="11"  height="2.5" fill="white"/>
+        <rect x="3.5" y="10"  width="8.5" height="2.5" fill="white"/>
+        <rect x="3.5" y="15"  width="5.5" height="2.5" fill="white"/>
+        <rect x="18"   y="16.5" width="2.5" height="8"    fill="white"/>
+        <rect x="22"   y="11"   width="2.5" height="13.5" fill="white"/>
+        <rect x="25.5" y="5"    width="2.5" height="19.5" fill="white"/>
       </svg>
       Resonance
     </div>
@@ -642,6 +818,7 @@
       <a href="#">Overview</a>
       <a href="#">Pipeline</a>
       <a href="#">Scoring</a>
+      <a href="#" id="openStudio" style="color:var(--accent);font-weight:600;">Studio</a>
     </div>
   </nav>
 
@@ -728,19 +905,17 @@
         <div class="team-eyebrow">Built at Cursor × Thrad · London · 2026</div>
         <div class="team-grid">
           <a href="https://github.com/kayaclaridge-sys" target="_blank" rel="noopener" class="team-card">
-            <img src="https://avatars.githubusercontent.com/u/244161105?v=4" alt="Kaya Claridge" class="team-avatar" />
+            <div class="team-avatar">KC</div>
             <div class="team-name">Kaya Claridge</div>
             <div class="team-handle">@kayaclaridge-sys</div>
-            <div class="team-bio">&nbsp;</div>
           </a>
           <a href="https://github.com/Vinuitik" target="_blank" rel="noopener" class="team-card">
-            <img src="https://avatars.githubusercontent.com/u/142442543?v=4" alt="Dmytro Syzonenko" class="team-avatar" />
+            <div class="team-avatar">DS</div>
             <div class="team-name">Dmytro Syzonenko</div>
             <div class="team-handle">@Vinuitik</div>
-            <div class="team-bio">&nbsp;</div>
           </a>
           <a href="https://github.com/LCS3002" target="_blank" rel="noopener" class="team-card">
-            <img src="https://avatars.githubusercontent.com/u/214897450?v=4" alt="Lorenz Huber" class="team-avatar" />
+            <div class="team-avatar">LH</div>
             <div class="team-name">Lorenz Huber</div>
             <div class="team-handle">@LCS3002</div>
             <div class="team-bio">Architecture @ UCL · London</div>
@@ -753,25 +928,23 @@
       <div class="footer-top">
         <div class="footer-brand">
           <div class="footer-brand-row">
-            <!-- Minimal brain icon -->
-            <svg class="footer-icon" width="36" height="28" viewBox="0 0 36 28" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M18 3 C13 3 8 6 7 10 C6 14 7 18 10 21 C12 23 15 24 18 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/>
-              <path d="M18 3 C23 3 28 6 29 10 C30 14 29 18 26 21 C24 23 21 24 18 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/>
-              <path d="M18 4 L18 23" stroke="currentColor" stroke-width="1" stroke-dasharray="2.5 2.5" opacity="0.35"/>
-              <path d="M9 12 C10.5 10 13 11 12.5 13.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" fill="none" opacity="0.55"/>
-              <path d="M27 12 C25.5 10 23 11 23.5 13.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" fill="none" opacity="0.55"/>
-              <path d="M10 17 C11.5 15.5 13.5 16.5 13 18.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" fill="none" opacity="0.4"/>
-              <path d="M26 17 C24.5 15.5 22.5 16.5 23 18.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" fill="none" opacity="0.4"/>
+            <svg class="footer-icon" width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <rect width="40" height="40" rx="5" fill="#EC521B"/>
+              <rect x="5"  y="7"  width="15.5" height="3.5" fill="white"/>
+              <rect x="5"  y="14" width="12"   height="3.5" fill="white"/>
+              <rect x="5"  y="21" width="7.5"  height="3.5" fill="white"/>
+              <rect x="26" y="24" width="3.5"  height="11"  fill="white"/>
+              <rect x="31" y="15.5" width="3.5" height="19.5" fill="white"/>
+              <rect x="36" y="7"   width="2"   height="28"  fill="white"/>
             </svg>
             <div class="footer-logo">Resonance</div>
           </div>
           <div class="footer-tagline">Neural Ad Intelligence</div>
         </div>
-        <nav class="footer-nav">
+        <div class="footer-nav">
           <a href="#">GitHub</a>
           <a href="#">API Docs</a>
-          <a href="#">MCP Endpoint</a>
-        </nav>
+        </div>
       </div>
       <div class="footer-bottom">
         <div class="footer-sponsors">
@@ -821,6 +994,13 @@
 
       <button class="demo-go" id="analyseBtn">Analyse →</button>
       <div class="demo-status-line" id="demoStatus"></div>
+      <div class="phase-bar" id="phaseBar">
+        <span class="phase-step" id="ph0">Brief</span><span class="phase-sep">·</span>
+        <span class="phase-step" id="ph1">Draft</span><span class="phase-sep">·</span>
+        <span class="phase-step" id="ph2">Neural Eval</span><span class="phase-sep">·</span>
+        <span class="phase-step" id="ph3">Refine</span><span class="phase-sep">·</span>
+        <span class="phase-step" id="ph4">Format</span>
+      </div>
 
       <!-- results appear here -->
       <div class="overlay-results" id="overlayResults">
@@ -828,6 +1008,77 @@
         <div id="resultsInner"></div>
       </div>
 
+    </div>
+  </div>
+
+  <!-- ── AGENT STUDIO OVERLAY ── -->
+  <div class="studio-overlay" id="studioOverlay">
+    <button class="demo-close" id="closeStudio" aria-label="Close">×</button>
+    <div class="studio-inner">
+
+      <div class="studio-heading">Agent Studio</div>
+      <div class="studio-sub">LangGraph S0→S1→Eval→S2→S3 · Neural scoring + gradient saliency + Claude refinement</div>
+
+      <input
+        type="text"
+        class="demo-field"
+        id="studioBrief"
+        placeholder="e.g. sustainable sneakers for Gen Z runners…"
+        autocomplete="off"
+      />
+
+      <div class="demo-row-label">Mode</div>
+      <div class="studio-mode-row">
+        <button class="mode-pill active" data-mode="text">Text only</button>
+        <button class="mode-pill" data-mode="text+image">Text + SVG mockup</button>
+      </div>
+
+      <div class="demo-row-label">Quick starts</div>
+      <div class="demo-suggests">
+        <button class="demo-suggest" data-brief="luxury electric SUV for London families">EV · London</button>
+        <button class="demo-suggest" data-brief="sustainable running trainers for Gen Z athletes">Trainers · Gen Z</button>
+        <button class="demo-suggest" data-brief="Spotify Premium for busy professionals who commute">Spotify · commuters</button>
+        <button class="demo-suggest" data-brief="premium noise-cancelling headphones for open-plan offices">Sony WH · office</button>
+      </div>
+
+      <button class="studio-go" id="studioRunBtn">Run Agent Pipeline →</button>
+
+      <!-- Pipeline progress -->
+      <div class="pipeline-progress" id="pipelineProgress">
+        <div class="pipeline-steps">
+          <div class="pipeline-step" id="ps0"><div class="step-dot">S0</div><div class="step-label">Intake</div></div>
+          <div class="pipeline-step" id="ps1"><div class="step-dot">S1</div><div class="step-label">Generate</div></div>
+          <div class="pipeline-step" id="psE"><div class="step-dot">⚡</div><div class="step-label">Eval</div></div>
+          <div class="pipeline-step" id="ps2"><div class="step-dot">S2</div><div class="step-label">Refine</div></div>
+          <div class="pipeline-step" id="ps3"><div class="step-dot">S3</div><div class="step-label">Format</div></div>
+        </div>
+        <div class="pipeline-status-line" id="pipelineStatus">Initialising…</div>
+      </div>
+
+      <!-- Results -->
+      <div class="studio-results" id="studioResults">
+
+        <div class="studio-result-section">
+          <div class="studio-section-label">Initial Draft — S1</div>
+          <div class="ad-card" id="initialDraftCard"></div>
+        </div>
+
+        <div class="studio-result-section" id="evalSection" style="display:none">
+          <div class="studio-section-label">Neural Eval + GoEmotions + Saliency</div>
+          <div class="eval-grid" id="evalGrid"></div>
+          <div class="saliency-block" id="saliencyBlock" style="display:none">
+            <div class="saliency-label">Gradient Feedback → S2</div>
+            <div class="saliency-text" id="saliencyText"></div>
+          </div>
+        </div>
+
+        <div class="studio-result-section">
+          <div class="studio-section-label">Final Ad — S3</div>
+          <div class="final-badge">Refined ✓</div>
+          <div class="ad-card" id="finalDraftCard"></div>
+        </div>
+
+      </div>
     </div>
   </div>
 
@@ -994,7 +1245,7 @@
       colorAttr.needsUpdate = true;
     }
 
-    fetch('./brain_mesh.json').then(r => r.json()).then(data => {
+    fetch('/api/brain-mesh').then(r => r.json()).then(data => {
       const posArr  = new Float32Array(data.vertices);
       sulcData       = new Float32Array(data.sulc);
       nVerts         = posArr.length / 3;
@@ -1054,7 +1305,8 @@
 
     // ── Scroll sections ───────────────────────────────────────────────────────
     const sections = [
-      { scrollStart: 0,    scrollEnd: 0.15, posX:  0.3, posY: 0,   rotX:  0.1,  rotY: 0.15,      camZ: 3.2, scale: 1.0  },
+      // Hero: brain slightly right-of-center, vertically centered — text stays readable
+      { scrollStart: 0,    scrollEnd: 0.15, posX:  0.2, posY: 0.0, rotX:  0.05, rotY: 0.10,      camZ: 3.3, scale: 1.0  },
       { scrollStart: 0.15, scrollEnd: 0.35, posX:  0.9, posY: 0,   rotX: -0.05, rotY: -0.5,       camZ: 2.8, scale: 1.05 },
       { scrollStart: 0.35, scrollEnd: 0.55, posX: -0.8, posY: 0.1, rotX:  0.3,  rotY: Math.PI,    camZ: 2.6, scale: 1.05 },
       { scrollStart: 0.55, scrollEnd: 0.65, posX:  0,   posY: 0,   rotX: -0.4,  rotY: 0.2,        camZ: 3.0, scale: 0.95 },
@@ -1216,35 +1468,81 @@
 
     briefInput.addEventListener('keydown', e => { if (e.key === 'Enter') analyseBtn.click(); });
 
+    const phaseBar    = document.getElementById('phaseBar');
+    const phaseSteps  = ['ph0','ph1','ph2','ph3','ph4'];
+    let   phaseTimer  = null;
+
+    function setPhase(idx) {
+      phaseSteps.forEach((id, i) => {
+        const el = document.getElementById(id);
+        el.classList.remove('active', 'done');
+        if (i < idx)  el.classList.add('done');
+        if (i === idx) el.classList.add('active');
+      });
+    }
+
+    function startPhaseAnimation() {
+      phaseBar.classList.add('show');
+      const delays = [0, 4000, 18000, 38000, 58000];
+      delays.forEach((d, i) => setTimeout(() => setPhase(i), d));
+    }
+
+    function stopPhaseAnimation() {
+      if (phaseTimer) clearTimeout(phaseTimer);
+      phaseSteps.forEach(id => {
+        const el = document.getElementById(id);
+        el.classList.remove('active'); el.classList.add('done');
+      });
+      setTimeout(() => phaseBar.classList.remove('show'), 1200);
+    }
+
     analyseBtn.addEventListener('click', async () => {
       const brief = briefInput.value.trim();
       if (!brief) { briefInput.focus(); return; }
 
       analyseBtn.disabled = true;
       analyseBtn.textContent = 'Generating…';
-      demoStatus.textContent = 'Researching brand context and generating variants…';
+      demoStatus.textContent = '';
       overlayRes.classList.remove('show');
+      startPhaseAnimation();
+
+      // Show timeline skeleton immediately
+      renderTimelineSkeleton();
+      overlayRes.classList.add('show');
+      setTimeout(() => overlayRes.scrollIntoView({ behavior: 'smooth', block: 'start' }), 200);
 
       try {
-        const res = await fetch(`${API_BASE}/api/campaign`, {
+        const res = await fetch(`${API_BASE}/api/campaign/stream`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ brief, num_variants: 3, target_emotion: selectedEmotion || null }),
+          body: JSON.stringify({ brief, target_emotion: selectedEmotion || null }),
         });
         if (!res.ok) throw new Error('API ' + res.status);
-        const data = await res.json();
 
-        demoStatus.textContent = data.variants.length + ' variants scored';
-        const w = data.winner;
-        window.setApiActivation && window.setApiActivation(
-          w.region_scores.language, w.region_scores.visual, w.region_scores.prefrontal
-        );
-        renderResults(data);
-        overlayRes.classList.add('show');
-        setTimeout(() => overlayRes.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
+        const reader = res.body.getReader();
+        const decoder = new TextDecoder();
+        let buf = '';
+
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          buf += decoder.decode(value, { stream: true });
+          const lines = buf.split('\n');
+          buf = lines.pop();
+          for (const line of lines) {
+            if (!line.startsWith('data: ')) continue;
+            try {
+              const evt = JSON.parse(line.slice(6));
+              handleStreamEvent(evt);
+            } catch {}
+          }
+        }
+
+        stopPhaseAnimation();
       } catch (e) {
+        stopPhaseAnimation();
         demoStatus.textContent = e.message.includes('fetch')
-          ? 'Start the API: python -m api.main'
+          ? 'Cannot reach API — run start.bat first'
           : 'Error: ' + e.message;
       }
 
@@ -1252,99 +1550,146 @@
       analyseBtn.textContent = 'Analyse →';
     });
 
-    function scoreColor(s) {
-      if (s >= 0.75) return '#5fa832';
-      if (s >= 0.55) return '#c4a83e';
-      if (s >= 0.45) return '#c4623e';
-      return '#c04040';
+    function handleStreamEvent(evt) {
+      if (evt.type === 'status') {
+        demoStatus.textContent = evt.text;
+      } else if (evt.type === 'initial') {
+        fillTimelineSlot('slot-initial', evt.draft, evt.neural, evt.emotion, evt.em_score, false);
+        const rs = (evt.neural || {}).region_scores || {};
+        window.setApiActivation && window.setApiActivation(rs.language||0, rs.visual||0, rs.prefrontal||0);
+      } else if (evt.type === 'initial-visual') {
+        const v = document.getElementById('visual-initial');
+        if (v) v.innerHTML = '<img src="' + evt.image_url + '" style="width:100%;height:100%;object-fit:cover;display:block;" />';
+      } else if (evt.type === 'refined') {
+        fillTimelineSlot('slot-refined', evt.draft, evt.neural, evt.emotion, evt.em_score, true);
+        const rs = (evt.neural || {}).region_scores || {};
+        window.setApiActivation && window.setApiActivation(rs.language||0, rs.visual||0, rs.prefrontal||0);
+        demoStatus.textContent = '';
+      } else if (evt.type === 'refined-visual') {
+        const v = document.getElementById('visual-refined');
+        if (v) v.innerHTML = '<img src="' + evt.image_url + '" style="width:100%;height:100%;object-fit:cover;display:block;" />';
+      } else if (evt.type === 'done') {
+        stopPhaseAnimation();
+        demoStatus.textContent = '';
+      } else if (evt.type === 'error') {
+        demoStatus.textContent = 'Error: ' + evt.text;
+        stopPhaseAnimation();
+      }
     }
 
-    function renderResults(data) {
-      let topHtml = '';
-
-      // Hero image (DALL-E 3)
-      if (data.hero_image_url) {
-        topHtml += '<img src="' + escHtml(data.hero_image_url) + '" alt="Campaign hero" class="result-hero-img" />';
-      }
-
-      // Campaign strategy
-      if (data.strategy) {
-        const bullets = data.strategy.split('\n').filter(l => l.trim());
-        topHtml += '<div class="strategy-block"><div class="strategy-block-label">Campaign Strategy</div>'
-          + '<div class="strategy-block-text">' + bullets.map(b => escHtml(b)).join('<br>') + '</div></div>';
-      }
-
-      // Brand context (Tavily)
-      if (data.brand_context) {
-        topHtml += '<div class="strategy-block" style="border-left-color:rgba(0,0,0,0.2);">'
-          + '<div class="strategy-block-label" style="color:var(--text-secondary);">Tavily Research</div>'
-          + '<div class="strategy-block-text">' + escHtml(data.brand_context) + '</div></div>';
-      }
-
-      brandCtxBox.innerHTML = topHtml;
-
-      // Variant cards
-      resultsInner.innerHTML = '<div class="results-grid">' + data.variants.map((v, i) => `
-        <div class="result-card ${i === 0 ? 'winner' : ''}" data-lang="${v.region_scores.language}" data-vis="${v.region_scores.visual}" data-pre="${v.region_scores.prefrontal}">
-          <div class="card-badges">
-            ${i === 0 ? '<span class="badge badge-winner">Top Variant</span>' : ''}
-            ${v.flagged ? '<span class="badge badge-flag">Human Review Required</span>' : ''}
-          </div>
-          <div class="card-score-row">
-            <div class="card-score" data-target="${Math.round(v.combined_score * 100)}" style="color:${scoreColor(v.combined_score)}">0</div>
-            <div class="card-score-suffix">/ 100 neural score</div>
-          </div>
-          <div class="card-model-scores">
-            Algonauts: ${Math.round((v.model_scores.algonauts||0)*100)}
-            &nbsp;&middot;&nbsp; TribeV2: ${Math.round((v.model_scores.tribe||0)*100)}
-            &nbsp;&middot;&nbsp; Custom: ${Math.round((v.model_scores.custom||0)*100)}
-          </div>
-          <div class="card-headline">${escHtml(v.headline)}</div>
-          <div class="card-body">${escHtml(v.body)}</div>
-          <div class="card-cta">${escHtml(v.cta)}</div>
-          <div class="region-bars">
-            ${['language','visual','prefrontal'].map(r =>
-              '<div class="region-bar-row"><span class="region-bar-label">' + r + '</span>'
-              + '<div class="region-bar-track"><div class="region-bar-fill fill-' + r + '" style="width:' + Math.round(v.region_scores[r]*100) + '%"></div></div></div>'
-            ).join('')}
-          </div>
-          <div class="card-emotion-row">
-            <span class="emotion-match">Predicted:</span>
-            <span class="predicted-emotion">${v.predicted_emotion || '—'}</span>
-            ${v.emotion_match_score != null ? '<span class="emotion-match">(' + Math.round(v.emotion_match_score*100) + '% target match)</span>' : ''}
-          </div>
-          ${v.counterfactual_hint ? '<div class="cf-hint"><div class="cf-hint-label">Counterfactual hint</div><div class="cf-hint-text">' + escHtml(v.counterfactual_hint) + '</div></div>' : ''}
-          ${v.flagged ? '<div class="hitl-btns"><button class="hitl-btn hitl-approve" onclick="reviewDecision(\'' + v.id + '\',true)">Approve</button><button class="hitl-btn hitl-reject" onclick="reviewDecision(\'' + v.id + '\',false)">Reject</button></div>' : ''}
-        </div>`).join('') + '</div>';
-
-      // Animate score counters and wire card clicks
-      setTimeout(() => {
-        animateAllCounters();
-        resultsInner.querySelectorAll('.result-card').forEach(card => {
-          card.addEventListener('click', () => {
-            resultsInner.querySelectorAll('.result-card').forEach(c => c.classList.remove('selected'));
-            card.classList.add('selected');
-            window.setApiActivation && window.setApiActivation(
-              parseFloat(card.dataset.lang),
-              parseFloat(card.dataset.vis),
-              parseFloat(card.dataset.pre),
-            );
-          });
-        });
-      }, 200);
+    function scorePillClass(s) {
+      if (s >= 0.65) return 'good';
+      if (s >= 0.50) return 'mid';
+      return 'low';
     }
 
-    async function reviewDecision(variantId, approved) {
+    function adVisualHtml(draft, id) {
+      if (draft && draft.image_url) {
+        return '<div class="ad-visual"><img src="' + draft.image_url + '" alt="Ad visual" /></div>';
+      }
+      const slotId = id || 'winner-visual';
+      return '<div class="ad-visual" id="' + slotId + '"><span class="ad-visual-placeholder">Generating visual…</span></div>';
+    }
+
+    async function generateWinnerVisual(winner, targetEmotion) {
+      if (!winner || !winner.image_prompt) return;
       try {
-        await fetch(`${API_BASE}/api/review`, {
+        const res = await fetch(`${API_BASE}/api/generate-visual`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ variant_id: variantId, approved }),
+          body: JSON.stringify({ image_prompt: winner.image_prompt, target_emotion: targetEmotion || '' }),
         });
-        demoStatus.textContent = approved ? 'Variant approved — Overmind loop updated' : 'Variant rejected — Overmind loop updated';
-      } catch(e) {
-        demoStatus.textContent = 'Review recorded locally';
-      }
+        if (!res.ok) return;
+        const { image_url } = await res.json();
+        if (!image_url) return;
+        const slot = document.getElementById('winner-visual');
+        if (slot) {
+          slot.innerHTML = '<img src="' + image_url + '" alt="Ad visual" style="width:100%;height:100%;object-fit:cover;display:block;" />';
+        }
+      } catch (e) { /* silent — visual is progressive enhancement */ }
+    }
+
+    function adCardHtml(draft, score, isWinner) {
+      if (!draft) return '';
+      const pct  = Math.round((score || 0) * 100);
+      const pc   = scorePillClass(score || 0);
+      const rs   = ((data_rs && data_rs[draft.id]) || {});
+      return `
+        <div class="ad-preview ${isWinner ? 'winner' : ''}">
+          ${adVisualHtml(draft)}
+          <div class="ad-copy">
+            <div class="ad-copy-headline">${escHtml(draft.headline || '')}</div>
+            <div class="ad-copy-body">${escHtml(draft.body || '')}</div>
+            <div class="ad-copy-footer">
+              <span class="ad-copy-cta">${escHtml(draft.cta || 'Learn more')}</span>
+              <span class="ad-score-pill ${pc}">${pct}</span>
+            </div>
+          </div>
+        </div>`;
+    }
+
+    function renderTimelineSkeleton() {
+      brandCtxBox.innerHTML = '';
+      resultsInner.innerHTML = `
+        <div class="tl-wrap">
+          <div class="tl-slot" id="slot-initial">
+            <div class="tl-label">Draft</div>
+            <div class="ad-preview">
+              <div class="ad-visual" id="visual-initial"><span class="ad-visual-placeholder">—</span></div>
+              <div class="ad-copy">
+                <div class="tl-skeleton"></div>
+                <div class="tl-skeleton tl-sk-short"></div>
+              </div>
+            </div>
+          </div>
+          <div class="tl-arrow">→</div>
+          <div class="tl-slot" id="slot-refined">
+            <div class="tl-label">Refined</div>
+            <div class="ad-preview">
+              <div class="ad-visual" id="visual-refined"><span class="ad-visual-placeholder">—</span></div>
+              <div class="ad-copy">
+                <div class="tl-skeleton"></div>
+                <div class="tl-skeleton tl-sk-short"></div>
+              </div>
+            </div>
+          </div>
+        </div>`;
+    }
+
+    function fillTimelineSlot(slotId, draft, neural, emotion, emScore, isWinner) {
+      const slot = document.getElementById(slotId);
+      if (!slot) return;
+      const score = (neural || {}).combined_score || 0;
+      const rs    = ((neural || {}).region_scores) || {};
+      const pc    = scorePillClass(score);
+      const label = isWinner
+        ? '<div class="tl-label refined">Winner <span class="tl-deploy-badge">Deploy →</span></div>'
+        : '<div class="tl-label">Draft</div>';
+
+      slot.innerHTML = label + `
+        <div class="ad-preview ${isWinner ? 'winner' : ''}">
+          <div class="ad-visual" id="visual-${isWinner ? 'refined' : 'initial'}">
+            <span class="ad-visual-placeholder">Generating…</span>
+          </div>
+          <div class="ad-copy">
+            <div class="ad-copy-headline">${escHtml(draft.headline || '')}</div>
+            <div class="ad-copy-body">${escHtml(draft.body || '')}</div>
+            <div class="ad-copy-footer">
+              <span class="ad-copy-cta">${escHtml(draft.cta || 'Learn more')}</span>
+              <span class="ad-score-pill ${pc}">${Math.round(score * 100)}</span>
+            </div>
+          </div>
+          <div class="ad-meta">
+            <div class="ad-meta-emotion">
+              ${emotion ? '<span class="emotion-tag">' + escHtml(emotion) + '</span>' : ''}
+            </div>
+            <div class="region-bars">${['language','visual','prefrontal'].map(r =>
+              '<div class="region-bar-row"><span class="region-bar-label">' + r + '</span>'
+              + '<div class="region-bar-track"><div class="region-bar-fill fill-' + r
+              + '" style="width:' + Math.round((rs[r]||0)*100) + '%"></div></div></div>'
+            ).join('')}</div>
+          </div>
+        </div>`;
     }
 
     function animateCounter(el, target, duration) {
@@ -1370,78 +1715,160 @@
     function escHtml(s) {
       return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
     }
-  </script>
 
-  <script>
-    // ── Constellation animation (Thrad-style stars + lines) ──────────────────
-    (function() {
-      const cc  = document.getElementById('constellationCanvas');
-      const ctx = cc.getContext('2d');
-      let W, H;
+    // ── AGENT STUDIO ─────────────────────────────────────────────────────────
 
-      function resize() {
-        W = cc.width  = window.innerWidth;
-        H = cc.height = window.innerHeight;
+    const studioOverlay = document.getElementById('studioOverlay');
+    const closeStudio   = document.getElementById('closeStudio');
+    const openStudio    = document.getElementById('openStudio');
+    const studioRunBtn  = document.getElementById('studioRunBtn');
+    const studioBrief   = document.getElementById('studioBrief');
+    const pipelineProgress = document.getElementById('pipelineProgress');
+    const pipelineStatus   = document.getElementById('pipelineStatus');
+    const studioResults    = document.getElementById('studioResults');
+
+    let studioMode = 'text';
+
+    openStudio.addEventListener('click', e => {
+      e.preventDefault();
+      studioOverlay.classList.add('open');
+    });
+    closeStudio.addEventListener('click', () => studioOverlay.classList.remove('open'));
+
+    // Mode pills
+    document.querySelectorAll('.mode-pill').forEach(pill => {
+      pill.addEventListener('click', () => {
+        document.querySelectorAll('.mode-pill').forEach(p => p.classList.remove('active'));
+        pill.classList.add('active');
+        studioMode = pill.dataset.mode;
+      });
+    });
+
+    // Quick-starts inside studio
+    studioOverlay.querySelectorAll('.demo-suggest').forEach(btn => {
+      btn.addEventListener('click', () => { studioBrief.value = btn.dataset.brief; });
+    });
+
+    function setStepState(id, state) {
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.classList.remove('active', 'done');
+      if (state) el.classList.add(state);
+    }
+
+    function renderAdCard(container, draft) {
+      if (!draft) { container.innerHTML = '<p style="color:var(--text-secondary);font-size:13px;">No draft available</p>'; return; }
+      container.innerHTML = `
+        <div class="ad-card-headline">${escHtml(draft.headline || '')}</div>
+        <div class="ad-card-body">${escHtml(draft.body || '')}</div>
+        <div class="ad-card-cta">${escHtml(draft.cta || '')}</div>
+        ${draft.image_url ? `<div class="ad-card-image"><img src="${draft.image_url}" alt="Ad visual mockup" /></div>` : ''}
+      `;
+    }
+
+    function renderEval(evalData) {
+      const evalSection = document.getElementById('evalSection');
+      const evalGrid    = document.getElementById('evalGrid');
+      const saliencyBlock = document.getElementById('saliencyBlock');
+      const saliencyText  = document.getElementById('saliencyText');
+
+      if (!evalData || !evalData.neural) { evalSection.style.display = 'none'; return; }
+      evalSection.style.display = 'block';
+
+      const n = evalData.neural;
+      const combinedPct = Math.round((n.combined_score || 0) * 100);
+      const emotion     = evalData.roberta_emotion || '—';
+      const conf        = evalData.roberta_confidence ? Math.round(evalData.roberta_confidence * 100) : '—';
+      const ge          = evalData.goemotion_scores || {};
+      const topGE       = Object.entries(ge).sort((a,b)=>b[1]-a[1]).slice(0,2).map(([k,v])=>`${k} ${Math.round(v*100)}%`).join(' · ');
+
+      evalGrid.innerHTML = `
+        <div class="eval-cell">
+          <div class="eval-cell-label">Neural Score</div>
+          <div class="eval-cell-value">${combinedPct}</div>
+          <div class="eval-cell-sub">/ 100 engagement</div>
+        </div>
+        <div class="eval-cell">
+          <div class="eval-cell-label">RoBERTa Emotion</div>
+          <div class="eval-cell-value" style="font-size:16px;text-transform:capitalize;">${escHtml(emotion)}</div>
+          <div class="eval-cell-sub">${conf}% confidence</div>
+        </div>
+        <div class="eval-cell" style="grid-column:1/-1">
+          <div class="eval-cell-label">GoEmotions top signals</div>
+          <div class="eval-cell-sub" style="font-size:12px;margin-top:4px;">${escHtml(topGE) || '—'}</div>
+        </div>
+      `;
+
+      const hint = evalData.saliency_hint || evalData.counterfactual_hint || '';
+      if (hint) {
+        saliencyBlock.style.display = 'block';
+        saliencyText.textContent = hint;
+      } else {
+        saliencyBlock.style.display = 'none';
       }
-      resize();
-      window.addEventListener('resize', resize);
+    }
 
-      const N = 68;
-      const pts = Array.from({length: N}, () => ({
-        x:  Math.random() * window.innerWidth,
-        y:  Math.random() * window.innerHeight,
-        vx: (Math.random() - 0.5) * 0.18,
-        vy: (Math.random() - 0.5) * 0.14,
-        r:  Math.random() * 1.4 + 0.7,
-        pulse: Math.random() * Math.PI * 2,
-      }));
+    studioRunBtn.addEventListener('click', async () => {
+      const brief = studioBrief.value.trim();
+      if (!brief) { studioBrief.focus(); return; }
 
-      const MAX_DIST = 190;
+      studioRunBtn.disabled = true;
+      studioResults.classList.remove('show');
+      pipelineProgress.classList.add('show');
+      ['ps0','ps1','psE','ps2','ps3'].forEach(id => setStepState(id, ''));
 
-      function isDarkMode() { return document.body.classList.contains('dark-mode'); }
+      const API = window.location.origin.includes('localhost') || window.location.hostname === '127.0.0.1'
+        ? 'http://localhost:8000'
+        : '';
 
-      function draw() {
-        ctx.clearRect(0, 0, W, H);
-        const dark = isDarkMode();
-        const base = dark ? '255,255,255' : '26,24,22';
+      try {
+        setStepState('ps0', 'active'); pipelineStatus.textContent = 'S0 — Parsing brief…';
+        await delay(300);
+        setStepState('ps0', 'done'); setStepState('ps1', 'active');
+        pipelineStatus.textContent = 'S1 — Generating initial draft…';
 
-        pts.forEach(p => {
-          p.x = (p.x + p.vx + W) % W;
-          p.y = (p.y + p.vy + H) % H;
-          p.pulse += 0.012;
+        const resp = await fetch(`${API}/api/agent/campaign`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ brief, mode: studioMode, run_eval: true }),
         });
 
-        // Lines
-        ctx.lineWidth = 0.55;
-        for (let i = 0; i < N; i++) {
-          for (let j = i + 1; j < N; j++) {
-            const dx = pts[i].x - pts[j].x, dy = pts[i].y - pts[j].y;
-            const d  = Math.sqrt(dx*dx + dy*dy);
-            if (d < MAX_DIST) {
-              const a = (1 - d / MAX_DIST) * (dark ? 0.18 : 0.13);
-              ctx.strokeStyle = `rgba(${base},${a})`;
-              ctx.beginPath();
-              ctx.moveTo(pts[i].x, pts[i].y);
-              ctx.lineTo(pts[j].x, pts[j].y);
-              ctx.stroke();
-            }
-          }
-        }
+        if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+        const data = await resp.json();
 
-        // Dots
-        pts.forEach(p => {
-          const a = (dark ? 0.35 : 0.22) + Math.sin(p.pulse) * 0.08;
-          ctx.fillStyle = `rgba(${base},${a})`;
-          ctx.beginPath();
-          ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-          ctx.fill();
-        });
+        setStepState('ps1', 'done'); setStepState('psE', 'active');
+        pipelineStatus.textContent = 'Eval — Neural scoring + saliency…';
+        await delay(200);
 
-        requestAnimationFrame(draw);
+        setStepState('psE', 'done'); setStepState('ps2', 'active');
+        pipelineStatus.textContent = 'S2 — Refining with gradient feedback…';
+        await delay(200);
+
+        setStepState('ps2', 'done'); setStepState('ps3', 'active');
+        pipelineStatus.textContent = 'S3 — Formatting final ad…';
+        await delay(200);
+
+        setStepState('ps3', 'done');
+        pipelineStatus.textContent = `Done · ${data.iteration_count || 2} iterations · target: ${data.target_emotion || 'auto'}`;
+
+        // Render results
+        renderAdCard(document.getElementById('initialDraftCard'), data.initial_draft);
+        renderEval(data.eval);
+        renderAdCard(document.getElementById('finalDraftCard'), data.final_draft);
+
+        studioResults.classList.add('show');
+
+      } catch(e) {
+        pipelineStatus.textContent = `Error: ${e.message}`;
+        ['ps0','ps1','psE','ps2','ps3'].forEach(id => setStepState(id, ''));
+      } finally {
+        studioRunBtn.disabled = false;
       }
-      draw();
-    })();
+    });
+
+    function delay(ms) { return new Promise(r => setTimeout(r, ms)); }
   </script>
+
 
 </body>
 </html>
