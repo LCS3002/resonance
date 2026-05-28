@@ -10,12 +10,12 @@
     * { margin: 0; padding: 0; box-sizing: border-box; }
 
     :root {
-      --bg: #F2EDE9;
+      --bg: #EDE7E1;
       --text: #1A1818;
       --text-secondary: #6b6b6b;
       --accent: #EC521B;
-      --light: #EDE8E4;
-      --border: rgba(0,0,0,0.08);
+      --light: #E6E0D8;
+      --border: rgba(0,0,0,0.09);
     }
 
     html { scroll-behavior: smooth; }
@@ -246,39 +246,190 @@
     .fade-in { opacity: 0; transform: translateY(40px); transition: opacity 0.8s ease, transform 0.8s ease; }
     .fade-in.visible { opacity: 1; transform: translateY(0); }
 
-    /* ── DEMO PANEL (fixed bottom bar) ── */
-    .demo-panel {
-      position: fixed; bottom: 0; left: 0; right: 0; z-index: 300;
-      background: rgba(224,222,218,0.94); backdrop-filter: blur(16px);
-      border-top: 1px solid var(--border);
-      padding: 14px 48px;
-      display: flex; align-items: center; gap: 12px;
+    /* ── HERO CTA BUTTON ── */
+    .run-btn {
+      display: inline-flex; align-items: center; gap: 10px;
+      margin-top: 32px;
+      background: var(--accent); color: #fff;
+      font-family: 'Space Grotesk', sans-serif; font-size: 15px; font-weight: 600;
+      letter-spacing: 0.3px; padding: 14px 28px;
+      border: none; border-radius: 2px; cursor: pointer;
+      transition: opacity 0.2s, transform 0.15s;
+      pointer-events: auto;
     }
-    body.dark-mode .demo-panel { background: rgba(20,20,20,0.94); }
-    .demo-panel .demo-label {
-      font-family: 'Space Grotesk', sans-serif; font-size: 12px; font-weight: 600;
-      letter-spacing: 1px; text-transform: uppercase; color: var(--accent);
-      white-space: nowrap;
+    .run-btn:hover { opacity: 0.88; transform: translateY(-1px); }
+    .run-btn .arrow { font-size: 18px; transition: transform 0.2s; }
+    .run-btn:hover .arrow { transform: translateX(3px); }
+
+    /* ── DEMO OVERLAY ── */
+    .demo-overlay {
+      position: fixed; inset: 0; z-index: 500;
+      background: rgba(242,237,233,0.97);
+      opacity: 0; pointer-events: none;
+      transform: translateY(16px);
+      transition: opacity 0.28s ease, transform 0.28s ease;
+      overflow-y: auto;
     }
-    .demo-input {
-      flex: 1; padding: 10px 14px;
-      font-family: 'Inter', sans-serif; font-size: 14px;
-      background: rgba(255,255,255,0.55); color: var(--text);
-      border: 1px solid var(--border); border-radius: 2px; outline: none;
-      transition: border-color 0.2s, background 0.2s;
+    body.dark-mode .demo-overlay { background: rgba(14,14,14,0.97); }
+    .demo-overlay.open { opacity: 1; pointer-events: auto; transform: translateY(0); }
+
+    .demo-close {
+      position: fixed; top: 24px; right: 48px; z-index: 502;
+      width: 36px; height: 36px; border-radius: 50%;
+      border: 1px solid var(--border); background: transparent; cursor: pointer;
+      font-size: 20px; line-height: 1; color: var(--text-secondary);
+      display: flex; align-items: center; justify-content: center;
+      transition: background 0.15s, color 0.15s;
     }
-    .demo-input:focus { border-color: var(--accent); background: rgba(255,255,255,0.8); }
-    body.dark-mode .demo-input { background: rgba(255,255,255,0.06); }
-    body.dark-mode .demo-input:focus { background: rgba(255,255,255,0.1); }
-    .demo-btn {
-      padding: 10px 24px; background: var(--accent); color: #fff;
-      font-family: 'Space Grotesk', sans-serif; font-size: 13px; font-weight: 600;
-      letter-spacing: 0.5px; border: none; border-radius: 2px; cursor: pointer;
-      transition: opacity 0.2s; white-space: nowrap;
+    .demo-close:hover { background: var(--light); color: var(--text); }
+
+    .demo-inner {
+      max-width: 760px; margin: 0 auto;
+      padding: 88px 48px 120px;
     }
-    .demo-btn:hover { opacity: 0.85; }
-    .demo-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-    .demo-status { font-size: 12px; color: var(--text-secondary); white-space: nowrap; }
+
+    .demo-heading {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 44px; font-weight: 700;
+      letter-spacing: -2px; line-height: 1.0;
+      margin-bottom: 36px;
+    }
+
+    .demo-field {
+      width: 100%; padding: 15px 18px;
+      font-family: 'Space Grotesk', sans-serif; font-size: 17px;
+      background: transparent; color: var(--text);
+      border: none; border-bottom: 2px solid var(--text);
+      outline: none; transition: border-color 0.2s;
+    }
+    .demo-field:focus { border-bottom-color: var(--accent); }
+    body.dark-mode .demo-field { border-bottom-color: rgba(255,255,255,0.4); }
+    body.dark-mode .demo-field:focus { border-bottom-color: var(--accent); }
+
+    .demo-row-label {
+      font-size: 10px; text-transform: uppercase; letter-spacing: 2.5px;
+      color: var(--text-secondary); margin-top: 28px; margin-bottom: 10px;
+    }
+
+    .emotion-chips { display: flex; gap: 8px; flex-wrap: wrap; }
+    .emotion-chip {
+      font-size: 12px; font-family: 'Inter', sans-serif;
+      padding: 6px 16px; border-radius: 20px;
+      border: 1px solid var(--border); background: transparent;
+      color: var(--text-secondary); cursor: pointer;
+      transition: all 0.15s;
+    }
+    .emotion-chip:hover { border-color: var(--accent); color: var(--accent); }
+    .emotion-chip.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+    .demo-suggests { display: flex; gap: 8px; flex-wrap: wrap; }
+    .demo-suggest {
+      font-size: 12px; padding: 5px 12px; border-radius: 20px;
+      border: 1px solid var(--border); background: transparent;
+      color: var(--text-secondary); cursor: pointer;
+      transition: all 0.15s; font-family: 'Inter', sans-serif;
+    }
+    .demo-suggest:hover { background: var(--light); color: var(--text); }
+
+    .demo-go {
+      margin-top: 32px; width: 100%; padding: 16px;
+      background: var(--accent); color: #fff;
+      font-family: 'Space Grotesk', sans-serif; font-size: 15px;
+      font-weight: 700; letter-spacing: 0.5px;
+      border: none; border-radius: 2px; cursor: pointer;
+      transition: opacity 0.2s;
+    }
+    .demo-go:hover { opacity: 0.88; }
+    .demo-go:disabled { opacity: 0.45; cursor: not-allowed; }
+
+    .demo-status-line {
+      margin-top: 14px; font-size: 12px; color: var(--text-secondary);
+      min-height: 18px;
+    }
+
+    /* Results inside overlay */
+    .overlay-results { display: none; margin-top: 56px; padding-top: 48px; border-top: 1px solid var(--border); }
+    .overlay-results.show { display: block; }
+
+    .result-hero-img {
+      width: 100%; aspect-ratio: 16/7; object-fit: cover;
+      border-radius: 2px; margin-bottom: 24px; display: block;
+    }
+
+    .strategy-block {
+      padding: 20px 24px; background: var(--light);
+      border-left: 3px solid var(--accent); border-radius: 2px;
+      margin-bottom: 28px;
+    }
+    .strategy-block-label {
+      font-size: 10px; text-transform: uppercase; letter-spacing: 2px;
+      color: var(--accent); font-weight: 600; margin-bottom: 10px;
+    }
+    .strategy-block-text { font-size: 13px; color: var(--text-secondary); line-height: 1.7; }
+
+    .results-grid { display: flex; flex-direction: column; gap: 12px; }
+
+    .result-card {
+      background: var(--light); border-radius: 2px;
+      padding: 20px; cursor: pointer;
+      border: 1px solid transparent; transition: border-color 0.2s;
+    }
+    .result-card:hover { border-color: var(--border); }
+    .result-card.selected { border-color: var(--accent); }
+    .result-card.winner { border-color: rgba(236,82,27,0.3); }
+
+    .card-badges { display: flex; gap: 6px; margin-bottom: 10px; }
+    .badge {
+      font-size: 10px; font-weight: 600; letter-spacing: 0.8px;
+      text-transform: uppercase; padding: 3px 8px; border-radius: 2px;
+    }
+    .badge-winner { background: rgba(236,82,27,0.1); color: var(--accent); }
+    .badge-flag   { background: rgba(200,50,50,0.08); color: #b03030; }
+    body.dark-mode .badge-flag { background: rgba(200,50,50,0.15); }
+
+    .card-score-row { display: flex; align-items: baseline; gap: 8px; margin-bottom: 8px; }
+    .card-score {
+      font-family: 'Space Grotesk', sans-serif; font-size: 36px;
+      font-weight: 700; line-height: 1;
+    }
+    .card-score-suffix { font-size: 13px; color: var(--text-secondary); }
+    .card-model-scores { font-size: 11px; color: var(--text-secondary); margin-bottom: 10px; }
+    .card-headline {
+      font-family: 'Space Grotesk', sans-serif; font-size: 16px;
+      font-weight: 600; letter-spacing: -0.3px; margin-bottom: 6px;
+    }
+    .card-body { font-size: 13px; color: var(--text-secondary); line-height: 1.6; margin-bottom: 8px; }
+    .card-cta  { font-size: 12px; font-weight: 600; color: var(--accent); text-transform: uppercase; letter-spacing: 0.5px; }
+
+    .card-emotion-row { display: flex; align-items: center; gap: 6px; margin-top: 10px; flex-wrap: wrap; }
+    .predicted-emotion { font-size: 11px; font-weight: 600; color: var(--accent); text-transform: capitalize; }
+    .emotion-match { font-size: 11px; color: var(--text-secondary); }
+
+    .cf-hint {
+      margin-top: 10px; padding: 8px 12px;
+      background: rgba(236,82,27,0.05); border-left: 2px solid var(--accent);
+      border-radius: 2px;
+    }
+    .cf-hint-label { font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: var(--accent); font-weight: 600; }
+    .cf-hint-text  { font-size: 12px; color: var(--text-secondary); line-height: 1.5; margin-top: 4px; }
+
+    .region-bars { display: flex; flex-direction: column; gap: 6px; margin-top: 12px; }
+    .region-bar-row { display: flex; align-items: center; gap: 8px; }
+    .region-bar-label { font-size: 11px; color: var(--text-secondary); width: 72px; }
+    .region-bar-track { flex: 1; height: 3px; border-radius: 2px; background: var(--border); overflow: hidden; }
+    .region-bar-fill  { height: 100%; border-radius: 2px; transition: width 0.6s ease; }
+    .fill-language    { background: #4a9fd4; }
+    .fill-visual      { background: var(--accent); }
+    .fill-prefrontal  { background: #5fa832; }
+
+    .hitl-btns { display: flex; gap: 8px; margin-top: 12px; }
+    .hitl-btn {
+      flex: 1; padding: 9px; border-radius: 2px; font-size: 12px;
+      cursor: pointer; font-family: inherit; transition: opacity 0.2s;
+    }
+    .hitl-approve { background: var(--accent); color: #fff; border: none; }
+    .hitl-reject  { background: transparent; color: var(--text-secondary); border: 1px solid var(--border); }
+    .hitl-btn:hover { opacity: 0.8; }
 
     /* ── RESULTS PANEL (slide in from right) ── */
     .results-panel {
@@ -408,17 +559,15 @@
       line-height: 1.6; margin-top: 12px;
     }
 
-    /* ── BRIEF PILLS ── */
-    .brief-pills { display: flex; gap: 8px; flex-wrap: wrap; }
-    .brief-pill {
-      font-size: 12px; padding: 5px 12px; border-radius: 20px;
-      border: 1px solid var(--border); background: transparent;
-      color: var(--text-secondary); cursor: pointer;
-      transition: background 0.15s, color 0.15s, border-color 0.15s;
-      font-family: 'Inter', sans-serif; white-space: nowrap;
+    /* dotted background — Aletheia style */
+    .dot-bg {
+      position: fixed; inset: 0; z-index: 0; pointer-events: none;
+      background-image: radial-gradient(circle, rgba(26,24,24,0.16) 1.2px, transparent 1.2px);
+      background-size: 24px 24px;
     }
-    .brief-pill:hover { background: var(--light); color: var(--text); border-color: rgba(0,0,0,0.2); }
-    body.dark-mode .brief-pill:hover { border-color: rgba(255,255,255,0.2); }
+    body.dark-mode .dot-bg {
+      background-image: radial-gradient(circle, rgba(255,255,255,0.10) 1.2px, transparent 1.2px);
+    }
 
     /* ── BRAIN PULSE ── */
     @keyframes brainPulse {
@@ -441,13 +590,15 @@
       .footer { padding: 40px 24px 120px; flex-direction: column; gap: 24px; align-items: flex-start; }
       .hero .scroll-hint { display: none; }
       .activation-legend { display: none; }
-      .demo-panel { padding: 12px 16px; }
-      .results-panel { width: 100vw; right: -100vw; }
+      .demo-close { right: 16px; top: 16px; }
+      .demo-inner { padding: 72px 24px 100px; }
+      .demo-heading { font-size: 30px; }
     }
   </style>
 </head>
 <body>
 
+  <div class="dot-bg"></div>
   <div id="loadingOverlay">
     <div class="loading-spin"></div>
     <div class="loading-label">Loading neural mesh</div>
@@ -482,12 +633,10 @@
       <div class="hero-content fade-in">
         <div class="eyebrow">Neural Ad Intelligence</div>
         <h1>Ads That<br>Resonate.</h1>
-        <p>Generate campaign variants, score them against predicted neural engagement, and deploy only what activates. Powered by brain-encoding models trained on fMRI response data.</p>
-        <div style="margin-top:24px; display:flex; gap:8px; flex-wrap:wrap;">
-          <span class="sponsor-chip">Tavily grounded</span>
-          <span class="sponsor-chip">Overmind traced</span>
-          <span class="sponsor-chip">Alpic MCP</span>
-        </div>
+        <p>Generate campaign variants, score them against predicted neural engagement, and deploy only what activates.</p>
+        <button class="run-btn" id="openDemo">
+          Run Campaign <span class="arrow">→</span>
+        </button>
       </div>
       <div class="scroll-hint"><span>Scroll</span><div class="line"></div></div>
     </section>
@@ -594,49 +743,49 @@
 
   </div>
 
-  <!-- ── DEMO PANEL ── -->
-  <div class="demo-panel" style="flex-direction:column; align-items:stretch; gap:8px; padding-top:10px; padding-bottom:10px;">
-    <div style="display:flex; align-items:center; gap:12px;">
-      <span class="demo-label">Try live</span>
+  <!-- ── DEMO OVERLAY ── -->
+  <div class="demo-overlay" id="demoOverlay">
+    <button class="demo-close" id="closeDemo" aria-label="Close">×</button>
+    <div class="demo-inner">
+
+      <div class="demo-heading">What are you<br>advertising?</div>
+
       <input
         type="text"
-        class="demo-input"
+        class="demo-field"
         id="briefInput"
-        placeholder="Describe your campaign brief…"
+        placeholder="e.g. luxury EV for London families…"
         autocomplete="off"
       />
-      <button class="demo-btn" id="analyseBtn">Analyse</button>
-      <span class="demo-status" id="demoStatus"></span>
-    </div>
-    <div style="padding-left:68px; display:flex; gap:16px; align-items:center; flex-wrap:wrap;">
-      <div style="display:flex; gap:6px; align-items:center;">
-        <span style="font-size:11px; text-transform:uppercase; letter-spacing:1.5px; color:var(--text-secondary); white-space:nowrap;">Target emotion</span>
-        <select id="emotionSelect" style="font-size:12px; font-family:inherit; background:transparent; border:1px solid var(--border); border-radius:2px; padding:4px 8px; color:var(--text); cursor:pointer; outline:none;">
-          <option value="">— any —</option>
-          <option value="aspirational">Aspirational</option>
-          <option value="trustworthy">Trustworthy</option>
-          <option value="urgent">Urgent</option>
-          <option value="playful">Playful</option>
-          <option value="premium">Premium</option>
-        </select>
-      </div>
-      <div class="brief-pills">
-        <button class="brief-pill" data-brief="luxury electric SUV for London families">Tesla EV · London</button>
-        <button class="brief-pill" data-brief="sustainable running trainers for Gen Z athletes">Nike · Gen Z</button>
-        <button class="brief-pill" data-brief="Spotify Premium for busy professionals who commute">Spotify · commuters</button>
-        <button class="brief-pill" data-brief="premium noise-cancelling headphones for open-plan offices">Sony WH · office</button>
-      </div>
-    </div>
-  </div>
 
-  <!-- ── RESULTS PANEL ── -->
-  <div class="results-panel" id="resultsPanel">
-    <div class="results-header">
-      <div class="results-title">Campaign Results</div>
-      <button class="results-close" id="closeResults">×</button>
+      <div class="demo-row-label">Target emotion</div>
+      <div class="emotion-chips">
+        <button class="emotion-chip active" data-emotion="">Any</button>
+        <button class="emotion-chip" data-emotion="aspirational">Aspirational</button>
+        <button class="emotion-chip" data-emotion="trustworthy">Trustworthy</button>
+        <button class="emotion-chip" data-emotion="urgent">Urgent</button>
+        <button class="emotion-chip" data-emotion="playful">Playful</button>
+        <button class="emotion-chip" data-emotion="premium">Premium</button>
+      </div>
+
+      <div class="demo-row-label">Quick start</div>
+      <div class="demo-suggests">
+        <button class="demo-suggest" data-brief="luxury electric SUV for London families">Tesla EV · London families</button>
+        <button class="demo-suggest" data-brief="sustainable running trainers for Gen Z athletes">Nike · Gen Z athletes</button>
+        <button class="demo-suggest" data-brief="Spotify Premium for busy professionals who commute">Spotify · commuters</button>
+        <button class="demo-suggest" data-brief="premium noise-cancelling headphones for open-plan offices">Sony WH · office</button>
+      </div>
+
+      <button class="demo-go" id="analyseBtn">Analyse →</button>
+      <div class="demo-status-line" id="demoStatus"></div>
+
+      <!-- results appear here -->
+      <div class="overlay-results" id="overlayResults">
+        <div id="brandContextBox"></div>
+        <div id="resultsInner"></div>
+      </div>
+
     </div>
-    <div id="brandContextBox"></div>
-    <div id="resultsInner"></div>
   </div>
 
   <script type="importmap">
@@ -658,17 +807,22 @@
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.toneMapping         = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 1.0;
-    renderer.setClearColor(0xF2EDE9, 1);
+    renderer.toneMappingExposure = 1.15;
+    renderer.setClearColor(0xEDE7E1, 1);
 
     const scene  = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(42, window.innerWidth / window.innerHeight, 0.01, 100);
     camera.position.set(0, 0, 3.2);
 
-    scene.add(new THREE.AmbientLight(0xffffff, 0.5));
-    const dl1 = new THREE.DirectionalLight(0xffffff, 2.0); dl1.position.set(4,5,4);   scene.add(dl1);
-    const dl2 = new THREE.DirectionalLight(0xc4a882, 1.0); dl2.position.set(-3,2,-2); scene.add(dl2);
-    const dl3 = new THREE.DirectionalLight(0x8899bb, 0.6); dl3.position.set(0,-3,3);  scene.add(dl3);
+    scene.add(new THREE.AmbientLight(0xfff6ee, 0.55));
+    // Key: warm bright upper-right
+    const dl1 = new THREE.DirectionalLight(0xfff5e8, 2.8); dl1.position.set(4, 5, 4);   scene.add(dl1);
+    // Fill: cool blue-grey left
+    const dl2 = new THREE.DirectionalLight(0x9ab0cc, 1.0); dl2.position.set(-4, 1, 1);  scene.add(dl2);
+    // Rim: warm orange-red from below-behind — creates depth edge glow
+    const dl3 = new THREE.DirectionalLight(0xff8855, 1.2); dl3.position.set(1, -3, -5); scene.add(dl3);
+    // Top: soft downlight
+    const dl4 = new THREE.DirectionalLight(0xffffff, 0.4); dl4.position.set(0, 6, 1);   scene.add(dl4);
 
     const HDRI_LIGHT = 'https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/1k/citrus_orchard_road_puresky_1k.hdr';
     const HDRI_DARK  = 'https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/1k/qwantani_dusk_2_1k.hdr';
@@ -692,7 +846,7 @@
       isDark = !isDark;
       document.body.classList.toggle('dark-mode', isDark);
       scene.environment = await loadHDRI(isDark ? HDRI_DARK : HDRI_LIGHT);
-      renderer.setClearColor(isDark ? 0x141414 : 0xF2EDE9, 1);
+      renderer.setClearColor(isDark ? 0x141414 : 0xEDE7E1, 1);
       renderer.toneMappingExposure = isDark ? 1.3 : 1.0;
       updateBrainColors();
     });
@@ -709,11 +863,25 @@
     }
 
     function vertexColor(sulcVal, activation) {
-      const baseMin = isDark ? 0.12 : 0.50;
-      const base    = baseMin + sulcVal * (isDark ? 0.25 : 0.28);
+      // Strong sulcal contrast: sulci = charcoal, gyri = bright warm
+      const lo = isDark ? 0.06 : 0.20;
+      const hi = isDark ? 0.78 : 0.97;
+      const base = lo + sulcVal * (hi - lo);
+
+      // Warm flesh tint on gyri
+      const r = Math.min(1, base + sulcVal * (isDark ? 0.06 : 0.10));
+      const g = base + sulcVal * 0.01;
+      const b = Math.max(0, base - sulcVal * (isDark ? 0.08 : 0.16));
+
+      if (activation < 0.015) return [r, g, b];
+
       const [hr, hg, hb] = hotColor(activation);
-      const blend   = Math.min(1, activation * 1.8);
-      return [base + (hr - base) * blend, base + (hg - base) * blend, base + (hb - base) * blend];
+      const blend = Math.min(1, activation * 2.2);
+      return [
+        r + (hr - r) * blend,
+        g + (hg - g) * blend,
+        b + (hb - b) * blend,
+      ];
     }
 
     function sc(x) { return Math.max(0, Math.min(1, x)); }
@@ -800,9 +968,41 @@
       updateBrainColors();
 
       brain = new THREE.Mesh(brainGeo, new THREE.MeshStandardMaterial({
-        vertexColors: true, roughness: 0.82, metalness: 0.08, side: THREE.DoubleSide,
+        vertexColors: true,
+        roughness: 0.58,
+        metalness: 0.04,
+        side: THREE.FrontSide,
+        flatShading: false,
       }));
       scene.add(brain);
+
+      // Sparse point cloud — every 8th vertex, slightly raised, Aletheia-style
+      const ptIdx = [];
+      for (let i = 0; i < nVerts; i += 8) ptIdx.push(i);
+      const ptPos = new Float32Array(ptIdx.length * 3);
+      const ptCol = new Float32Array(ptIdx.length * 3);
+      for (let j = 0; j < ptIdx.length; j++) {
+        const i = ptIdx[j];
+        ptPos[j*3]   = posArr[i*3];
+        ptPos[j*3+1] = posArr[i*3+1];
+        ptPos[j*3+2] = posArr[i*3+2];
+        ptCol[j*3] = ptCol[j*3+1] = ptCol[j*3+2] = 0.75;
+      }
+      const ptGeo  = new THREE.BufferGeometry();
+      ptGeo.setAttribute('position', new THREE.BufferAttribute(ptPos, 3));
+      const ptColAttr = new THREE.BufferAttribute(ptCol, 3);
+      ptGeo.setAttribute('color', ptColAttr);
+      const ptMat  = new THREE.PointsMaterial({
+        vertexColors: true, size: 0.006,
+        sizeAttenuation: true, transparent: true, opacity: 0.55,
+      });
+      const brainPts = new THREE.Points(ptGeo, ptMat);
+      scene.add(brainPts);
+
+      // Keep points in sync with brain transform
+      brain._pts = brainPts;
+      brain._ptColAttr = ptColAttr;
+      brain._ptIdx = ptIdx;
 
       document.getElementById('loadingOverlay').classList.add('hidden');
       setTimeout(() => { document.getElementById('loadingOverlay').style.display = 'none'; }, 700);
@@ -897,6 +1097,27 @@
         brain.rotation.y = lerp(cur.rotY, nxt.rotY, localT) + Math.sin(Date.now() * 0.00025) * 0.04 + orbitX;
         brain.scale.setScalar(lerp(cur.scale, nxt.scale, localT));
         camera.position.z = lerp(cur.camZ, nxt.camZ, localT);
+
+        // Keep point cloud in sync
+        if (brain._pts) {
+          brain._pts.position.copy(brain.position);
+          brain._pts.rotation.copy(brain.rotation);
+          brain._pts.scale.copy(brain.scale);
+          // Update point colors from vertex colors (sampled)
+          if (colorTimer % 4 === 0 && brain._ptIdx) {
+            const mc = colorAttr.array;
+            const pc = brain._ptColAttr.array;
+            const idx = brain._ptIdx;
+            for (let j = 0; j < idx.length; j++) {
+              const i = idx[j];
+              // Slightly boost brightness for points
+              pc[j*3]   = Math.min(1, mc[i*3]   * 1.12);
+              pc[j*3+1] = Math.min(1, mc[i*3+1] * 1.10);
+              pc[j*3+2] = Math.min(1, mc[i*3+2] * 1.08);
+            }
+            brain._ptColAttr.needsUpdate = true;
+          }
+        }
       }
 
       renderer.render(scene, camera);
@@ -905,72 +1126,87 @@
   </script>
 
   <script>
-    // ── Demo panel logic (non-module so it can call window.setApiActivation) ──
+    // ── Demo overlay logic ──
     const API_BASE = 'http://localhost:8000';
 
-    const briefInput  = document.getElementById('briefInput');
-    const analyseBtn  = document.getElementById('analyseBtn');
-    const demoStatus  = document.getElementById('demoStatus');
-    const resultsPanel = document.getElementById('resultsPanel');
+    const overlay      = document.getElementById('demoOverlay');
+    const briefInput   = document.getElementById('briefInput');
+    const analyseBtn   = document.getElementById('analyseBtn');
+    const demoStatus   = document.getElementById('demoStatus');
+    const overlayRes   = document.getElementById('overlayResults');
     const resultsInner = document.getElementById('resultsInner');
     const brandCtxBox  = document.getElementById('brandContextBox');
-    const closeBtn     = document.getElementById('closeResults');
 
-    closeBtn.addEventListener('click', () => {
-      resultsPanel.classList.remove('open');
+    document.getElementById('openDemo').addEventListener('click', () => {
+      overlay.classList.add('open');
+      setTimeout(() => briefInput.focus(), 300);
+    });
+
+    document.getElementById('closeDemo').addEventListener('click', () => {
+      overlay.classList.remove('open');
       window.setApiActivation && window.setApiActivation(0, 0, 0);
     });
 
-    briefInput.addEventListener('keydown', e => { if (e.key === 'Enter') analyseBtn.click(); });
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape' && overlay.classList.contains('open'))
+        overlay.classList.remove('open');
+    });
 
-    // Brief pill clicks
-    document.querySelectorAll('.brief-pill').forEach(pill => {
-      pill.addEventListener('click', () => {
-        briefInput.value = pill.dataset.brief;
+    // Emotion chips
+    let selectedEmotion = '';
+    document.querySelectorAll('.emotion-chip').forEach(chip => {
+      chip.addEventListener('click', () => {
+        document.querySelectorAll('.emotion-chip').forEach(c => c.classList.remove('active'));
+        chip.classList.add('active');
+        selectedEmotion = chip.dataset.emotion;
+      });
+    });
+
+    // Quick-start suggestions
+    document.querySelectorAll('.demo-suggest').forEach(s => {
+      s.addEventListener('click', () => {
+        briefInput.value = s.dataset.brief;
         briefInput.focus();
         analyseBtn.click();
       });
     });
 
+    briefInput.addEventListener('keydown', e => { if (e.key === 'Enter') analyseBtn.click(); });
+
     analyseBtn.addEventListener('click', async () => {
       const brief = briefInput.value.trim();
-      if (!brief) return;
+      if (!brief) { briefInput.focus(); return; }
 
       analyseBtn.disabled = true;
-      analyseBtn.textContent = '…';
-      demoStatus.textContent = 'Researching brand context…';
+      analyseBtn.textContent = 'Generating…';
+      demoStatus.textContent = 'Researching brand context and generating variants…';
+      overlayRes.classList.remove('show');
 
       try {
-        const targetEmotion = document.getElementById('emotionSelect').value;
-      const res = await fetch(`${API_BASE}/api/campaign`, {
+        const res = await fetch(`${API_BASE}/api/campaign`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ brief, num_variants: 3, target_emotion: targetEmotion || null }),
+          body: JSON.stringify({ brief, num_variants: 3, target_emotion: selectedEmotion || null }),
         });
-
-        if (!res.ok) throw new Error(`API ${res.status}`);
+        if (!res.ok) throw new Error('API ' + res.status);
         const data = await res.json();
 
-        demoStatus.textContent = `${data.variants.length} variants scored`;
-
-        // Drive brain activation from winner
+        demoStatus.textContent = data.variants.length + ' variants scored';
         const w = data.winner;
-        window.setApiActivation(
-          w.region_scores.language,
-          w.region_scores.visual,
-          w.region_scores.prefrontal,
+        window.setApiActivation && window.setApiActivation(
+          w.region_scores.language, w.region_scores.visual, w.region_scores.prefrontal
         );
-
         renderResults(data);
-        resultsPanel.classList.add('open');
+        overlayRes.classList.add('show');
+        setTimeout(() => overlayRes.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
       } catch (e) {
         demoStatus.textContent = e.message.includes('fetch')
           ? 'Start the API: python -m api.main'
-          : `Error: ${e.message}`;
+          : 'Error: ' + e.message;
       }
 
       analyseBtn.disabled = false;
-      analyseBtn.textContent = 'Analyse';
+      analyseBtn.textContent = 'Analyse →';
     });
 
     function scoreColor(s) {
@@ -985,36 +1221,27 @@
 
       // Hero image (DALL-E 3)
       if (data.hero_image_url) {
-        topHtml += `
-          <div style="margin-bottom:16px; border-radius:4px; overflow:hidden; aspect-ratio:1; background:var(--light);">
-            <img src="${escHtml(data.hero_image_url)}" alt="Campaign hero image"
-                 style="width:100%; height:100%; object-fit:cover; display:block;" />
-          </div>`;
+        topHtml += '<img src="' + escHtml(data.hero_image_url) + '" alt="Campaign hero" class="result-hero-img" />';
       }
 
       // Campaign strategy
       if (data.strategy) {
         const bullets = data.strategy.split('\n').filter(l => l.trim());
-        topHtml += `
-          <div style="margin-bottom:16px; padding:14px 16px; background:var(--light); border-radius:3px; border-left:2px solid var(--accent);">
-            <div style="font-size:10px; text-transform:uppercase; letter-spacing:2px; color:var(--accent); font-weight:600; margin-bottom:8px;">Campaign Strategy</div>
-            ${bullets.map(b => `<div style="font-size:13px; color:var(--text-secondary); line-height:1.6; margin-bottom:4px;">${escHtml(b)}</div>`).join('')}
-          </div>`;
+        topHtml += '<div class="strategy-block"><div class="strategy-block-label">Campaign Strategy</div>'
+          + '<div class="strategy-block-text">' + bullets.map(b => escHtml(b)).join('<br>') + '</div></div>';
       }
 
       // Brand context (Tavily)
       if (data.brand_context) {
-        topHtml += `
-          <div class="brand-context">
-            <div class="brand-context-label">Tavily Research</div>
-            ${escHtml(data.brand_context)}
-          </div>`;
+        topHtml += '<div class="strategy-block" style="border-left-color:rgba(0,0,0,0.2);">'
+          + '<div class="strategy-block-label" style="color:var(--text-secondary);">Tavily Research</div>'
+          + '<div class="strategy-block-text">' + escHtml(data.brand_context) + '</div></div>';
       }
 
       brandCtxBox.innerHTML = topHtml;
 
       // Variant cards
-      resultsInner.innerHTML = data.variants.map((v, i) => `
+      resultsInner.innerHTML = '<div class="results-grid">' + data.variants.map((v, i) => `
         <div class="result-card ${i === 0 ? 'winner' : ''}" data-lang="${v.region_scores.language}" data-vis="${v.region_scores.visual}" data-pre="${v.region_scores.prefrontal}">
           <div class="card-badges">
             ${i === 0 ? '<span class="badge badge-winner">Top Variant</span>' : ''}
@@ -1022,57 +1249,46 @@
           </div>
           <div class="card-score-row">
             <div class="card-score" data-target="${Math.round(v.combined_score * 100)}" style="color:${scoreColor(v.combined_score)}">0</div>
-            <div class="card-score-label">/ 100 neural score</div>
+            <div class="card-score-suffix">/ 100 neural score</div>
           </div>
           <div class="card-model-scores">
-            Algonauts: ${Math.round((v.model_scores.algonauts||0) * 100)}
-            &nbsp;·&nbsp; TribeV2: ${Math.round((v.model_scores.tribe||0) * 100)}
-            &nbsp;·&nbsp; Custom: ${Math.round((v.model_scores.custom||0) * 100)}
+            Algonauts: ${Math.round((v.model_scores.algonauts||0)*100)}
+            &nbsp;&middot;&nbsp; TribeV2: ${Math.round((v.model_scores.tribe||0)*100)}
+            &nbsp;&middot;&nbsp; Custom: ${Math.round((v.model_scores.custom||0)*100)}
           </div>
           <div class="card-headline">${escHtml(v.headline)}</div>
           <div class="card-body">${escHtml(v.body)}</div>
           <div class="card-cta">${escHtml(v.cta)}</div>
           <div class="region-bars">
-            ${['language','visual','prefrontal'].map(r => `
-              <div class="region-bar-row">
-                <span class="region-bar-label">${r}</span>
-                <div class="region-bar-track">
-                  <div class="region-bar-fill fill-${r}" style="width:${Math.round(v.region_scores[r]*100)}%"></div>
-                </div>
-              </div>`).join('')}
+            ${['language','visual','prefrontal'].map(r =>
+              '<div class="region-bar-row"><span class="region-bar-label">' + r + '</span>'
+              + '<div class="region-bar-track"><div class="region-bar-fill fill-' + r + '" style="width:' + Math.round(v.region_scores[r]*100) + '%"></div></div></div>'
+            ).join('')}
           </div>
-          <div style="margin-top:10px; display:flex; gap:6px; align-items:center; flex-wrap:wrap;">
-            <span style="font-size:11px; color:var(--text-secondary);">Predicted:</span>
-            <span style="font-size:11px; font-weight:600; color:var(--accent); text-transform:capitalize;">${v.predicted_emotion || '—'}</span>
-            ${v.emotion_match_score != null ? `<span style="font-size:11px; color:var(--text-secondary);">(${Math.round(v.emotion_match_score * 100)}% target match)</span>` : ''}
+          <div class="card-emotion-row">
+            <span class="emotion-match">Predicted:</span>
+            <span class="predicted-emotion">${v.predicted_emotion || '—'}</span>
+            ${v.emotion_match_score != null ? '<span class="emotion-match">(' + Math.round(v.emotion_match_score*100) + '% target match)</span>' : ''}
           </div>
-          ${v.counterfactual_hint ? `
-            <div style="margin-top:8px; padding:8px 10px; background:rgba(236,82,27,0.06); border-radius:2px; border-left:2px solid var(--accent);">
-              <span style="font-size:10px; text-transform:uppercase; letter-spacing:1px; color:var(--accent); font-weight:600;">Counterfactual hint</span>
-              <div style="font-size:12px; color:var(--text-secondary); margin-top:4px; line-height:1.5;">${escHtml(v.counterfactual_hint)}</div>
-            </div>` : ''}
-          ${v.flagged ? `
-            <div style="margin-top:12px; display:flex; gap:8px;">
-              <button onclick="reviewDecision('${v.id}', true)" style="flex:1; padding:8px; background:var(--accent); color:#fff; border:none; border-radius:2px; font-size:12px; cursor:pointer; font-family:inherit;">Approve</button>
-              <button onclick="reviewDecision('${v.id}', false)" style="flex:1; padding:8px; background:transparent; color:var(--text-secondary); border:1px solid var(--border); border-radius:2px; font-size:12px; cursor:pointer; font-family:inherit;">Reject</button>
-            </div>` : ''}
-        </div>`).join('');
+          ${v.counterfactual_hint ? '<div class="cf-hint"><div class="cf-hint-label">Counterfactual hint</div><div class="cf-hint-text">' + escHtml(v.counterfactual_hint) + '</div></div>' : ''}
+          ${v.flagged ? '<div class="hitl-btns"><button class="hitl-btn hitl-approve" onclick="reviewDecision(\'' + v.id + '\',true)">Approve</button><button class="hitl-btn hitl-reject" onclick="reviewDecision(\'' + v.id + '\',false)">Reject</button></div>' : ''}
+        </div>`).join('') + '</div>';
 
-      // Animate score counters after a short delay
-      setTimeout(animateAllCounters, 200);
-
-      // Click card → update brain
-      resultsInner.querySelectorAll('.result-card').forEach(card => {
-        card.addEventListener('click', () => {
-          resultsInner.querySelectorAll('.result-card').forEach(c => c.classList.remove('selected'));
-          card.classList.add('selected');
-          window.setApiActivation(
-            parseFloat(card.dataset.lang),
-            parseFloat(card.dataset.vis),
-            parseFloat(card.dataset.pre),
-          );
+      // Animate score counters and wire card clicks
+      setTimeout(() => {
+        animateAllCounters();
+        resultsInner.querySelectorAll('.result-card').forEach(card => {
+          card.addEventListener('click', () => {
+            resultsInner.querySelectorAll('.result-card').forEach(c => c.classList.remove('selected'));
+            card.classList.add('selected');
+            window.setApiActivation && window.setApiActivation(
+              parseFloat(card.dataset.lang),
+              parseFloat(card.dataset.vis),
+              parseFloat(card.dataset.pre),
+            );
+          });
         });
-      });
+      }, 200);
     }
 
     async function reviewDecision(variantId, approved) {
