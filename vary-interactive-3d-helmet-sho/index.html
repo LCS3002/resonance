@@ -1422,7 +1422,7 @@
 
   <script>
     // ── Demo overlay logic ──
-    const API_BASE = 'http://localhost:8000';
+    const API_BASE = ''; // same-origin — backend serves the frontend
 
     const overlay      = document.getElementById('demoOverlay');
     const briefInput   = document.getElementById('briefInput');
@@ -1817,9 +1817,7 @@
       pipelineProgress.classList.add('show');
       ['ps0','ps1','psE','ps2','ps3'].forEach(id => setStepState(id, ''));
 
-      const API = window.location.origin.includes('localhost') || window.location.hostname === '127.0.0.1'
-        ? 'http://localhost:8000'
-        : '';
+      const API = ''; // same-origin
 
       try {
         setStepState('ps0', 'active'); pipelineStatus.textContent = 'S0 — Parsing brief…';

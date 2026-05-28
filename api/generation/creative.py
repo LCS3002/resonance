@@ -67,8 +67,8 @@ async def generate_campaign_strategy(
         f"Format: plain text, three bullet points starting with •"
     )
 
-    resp = _claude.messages.create(
-        model="claude-haiku-4-5-20251001",  # fast + cheap for strategy
+    resp = await _claude.messages.acreate(
+        model="claude-haiku-4-5-20251001",
         max_tokens=300,
         messages=[{"role": "user", "content": prompt}],
     )
@@ -117,7 +117,7 @@ async def generate_variants(
         f"headline, body, image_prompt, cta. No markdown, no commentary."
     )
 
-    resp = _claude.messages.create(
+    resp = await _claude.messages.acreate(
         model="claude-sonnet-4-6",
         max_tokens=1200,
         system=_SYSTEM,

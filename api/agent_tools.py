@@ -25,36 +25,47 @@ _EMOTION_PALETTES = {
 }
 
 
-def image_gen(image_prompt: str, target_emotion: str = "") -> dict:
-    """Generate a 300×250 SVG ad mockup via Claude Haiku.
-
-    Returns { image_url: data URI, svg_source: str }.
-    Used in S1 and conditionally in S2 when image_prompt changes.
-    """
+def _svg_prompt(image_prompt: str, target_emotion: str) -> str:
     palette = _EMOTION_PALETTES.get(target_emotion, "clean neutrals with brand accent colour")
-    resp = _claude.messages.create(
-        model="claude-haiku-4-5-20251001",
-        max_tokens=1800,
-        messages=[{
-            "role": "user",
-            "content": (
-                f"Create a minimal SVG ad visual for: {image_prompt}\n\n"
-                f"Colour palette: {palette}\n\n"
-                "Rules:\n"
-                "- Exactly viewBox=\"0 0 300 250\"\n"
-                "- Use <defs> with at least one <linearGradient>\n"
-                "- 3-5 geometric shapes (rect, circle, ellipse, path) to suggest the scene\n"
-                "- NO <text> elements\n"
-                "- Modern, clean, ad-agency aesthetic\n\n"
-                "Return ONLY the SVG XML starting with <svg, no markdown fences, no commentary."
-            ),
-        }]
+    return (
+        f"Create a minimal SVG ad visual for: {image_prompt}\n\n"
+        f"Colour palette: {palette}\n\n"
+        "Rules:\n"
+        "- Exactly viewBox=\"0 0 300 250\"\n"
+        "- Use <defs> with at least one <linearGradient>\n"
+        "- 3-5 geometric shapes (rect, circle, ellipse, path) to suggest the scene\n"
+        "- NO <text> elements\n"
+        "- Modern, clean, ad-agency aesthetic\n\n"
+        "Return ONLY the SVG XML starting with <svg, no markdown fences, no commentary."
     )
-    raw = resp.content[0].text.strip()
+
+
+def _parse_svg(text: str) -> dict:
+    raw = text.strip()
     match = re.search(r"<svg[\s\S]*?</svg>", raw, re.IGNORECASE)
     svg = match.group(0) if match else raw
     data_uri = "data:image/svg+xml;base64," + base64.b64encode(svg.encode()).decode()
     return {"image_url": data_uri, "svg_source": svg}
+
+
+def image_gen(image_prompt: str, target_emotion: str = "") -> dict:
+    """Sync SVG generation — used by LangGraph nodes (run in thread executor)."""
+    resp = _claude.messages.create(
+        model="claude-haiku-4-5-20251001",
+        max_tokens=1800,
+        messages=[{"role": "user", "content": _svg_prompt(image_prompt, target_emotion)}],
+    )
+    return _parse_svg(resp.content[0].text)
+
+
+async def image_gen_async(image_prompt: str, target_emotion: str = "") -> dict:
+    """Async SVG generation — use in FastAPI handlers and SSE generators."""
+    resp = await _claude.messages.acreate(
+        model="claude-haiku-4-5-20251001",
+        max_tokens=1800,
+        messages=[{"role": "user", "content": _svg_prompt(image_prompt, target_emotion)}],
+    )
+    return _parse_svg(resp.content[0].text)
 
 
 def check_platform_constraints(

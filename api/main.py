@@ -262,16 +262,16 @@ async def campaign_stream(req: CampaignRequest):
 
             yield f"data: {json.dumps({'type':'initial','draft':draft,'neural':neural,'emotion':em,'em_score':round(em_score,3)})}\n\n"
 
-            # ── Step 3: SVG for initial + saliency — parallel ────────────────
+            # ── Step 3: SVG + saliency in true async parallel ────────────────
             yield f"data: {json.dumps({'type':'status','text':'Generating visual & saliency…'})}\n\n"
 
-            from .agent_tools import image_gen as _image_gen
+            from .agent_tools import image_gen_async as _image_gen_async
 
-            def _gen_svg():
-                try:   return _image_gen(draft.get("image_prompt",""), target)["image_url"]
+            async def _gen_svg_async():
+                try:   return (await _image_gen_async(draft.get("image_prompt",""), target))["image_url"]
                 except: return None
 
-            def _saliency():
+            def _saliency_sync():
                 hint = ""
                 if goemotion.is_available() and target:
                     ge_label = (PROFILE_TO_GOEMOTION.get(target) or [""])[0]
@@ -282,10 +282,12 @@ async def campaign_stream(req: CampaignRequest):
                         hint  = build_feedback_hint(score_text, ge_label, pairs, goem)
                 return hint or compute_counterfactual_hint(target, neural["region_scores"])
 
+            # SVG is async (non-blocking), saliency is CPU-bound (run in executor)
             loop = asyncio.get_event_loop()
-            svg_task = loop.run_in_executor(None, _gen_svg)
-            sal_task = loop.run_in_executor(None, _saliency)
-            initial_svg, feedback = await asyncio.gather(svg_task, sal_task)
+            initial_svg, feedback = await asyncio.gather(
+                _gen_svg_async(),
+                loop.run_in_executor(None, _saliency_sync),
+            )
 
             if initial_svg:
                 yield f"data: {json.dumps({'type':'initial-visual','image_url':initial_svg})}\n\n"
@@ -294,11 +296,9 @@ async def campaign_stream(req: CampaignRequest):
             if feedback:
                 yield f"data: {json.dumps({'type':'status','text':'Refining with neural feedback…'})}\n\n"
 
-                from .generation.creative import generate_variants as _gen
-                from anthropic import Anthropic
                 from .claude_local import local_claude as _claude
 
-                resp = _claude.messages.create(
+                resp = await _claude.messages.acreate(
                     model="claude-sonnet-4-6",
                     max_tokens=600,
                     system="You are an expert ad copywriter. Revise ad copy based on emotion feedback. Keep brand message; change framing.",
@@ -329,12 +329,11 @@ async def campaign_stream(req: CampaignRequest):
 
                 yield f"data: {json.dumps({'type':'refined','draft':refined,'neural':rneural,'emotion':rem,'em_score':round(rem_score,3)})}\n\n"
 
-                # SVG for refined
-                def _gen_refined_svg():
-                    try:   return _image_gen(refined.get("image_prompt",""), target)["image_url"]
-                    except: return None
-
-                refined_svg = await loop.run_in_executor(None, _gen_refined_svg)
+                # SVG for refined — async, non-blocking
+                try:
+                    refined_svg = (await _image_gen_async(refined.get("image_prompt",""), target))["image_url"]
+                except Exception:
+                    refined_svg = None
                 if refined_svg:
                     yield f"data: {json.dumps({'type':'refined-visual','image_url':refined_svg})}\n\n"
 
