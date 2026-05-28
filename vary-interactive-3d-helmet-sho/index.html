@@ -46,7 +46,7 @@
     }
     nav .logo {
       font-family: 'Space Grotesk', sans-serif; font-weight: 700;
-      font-size: 18px; color: #fff; letter-spacing: -0.5px;
+      font-size: 22px; color: #fff; letter-spacing: -0.8px;
     }
     nav .nav-links { display: flex; gap: 32px; margin-right: 60px; }
     nav .nav-links a {
@@ -229,18 +229,46 @@
 
     /* ── FOOTER ── */
     .footer {
-      padding: 60px 48px 120px;
-      display: flex; justify-content: space-between; align-items: flex-end;
+      padding: 64px 48px 48px;
+      background: var(--light);
       border-top: 1px solid var(--border);
-      background: rgba(224,222,218,0.8); backdrop-filter: blur(8px);
     }
-    .footer .footer-logo {
+    .footer-top {
+      display: flex; justify-content: space-between; align-items: flex-start;
+      padding-bottom: 48px; border-bottom: 1px solid var(--border);
+      gap: 48px;
+    }
+    .footer-brand { display: flex; flex-direction: column; gap: 0; }
+    .footer-brand-row { display: flex; align-items: center; gap: 14px; }
+    .footer-icon { flex-shrink: 0; color: var(--accent); }
+    .footer-logo {
       font-family: 'Space Grotesk', sans-serif; font-weight: 700;
-      font-size: 24px; letter-spacing: -1px;
+      font-size: 42px; letter-spacing: -2px; line-height: 1;
     }
-    .footer .footer-links { display: flex; gap: 24px; }
-    .footer .footer-links a { font-size: 13px; color: var(--text-secondary); text-decoration: none; }
-    .footer .footer-copy { font-size: 12px; color: var(--text-secondary); }
+    .footer-tagline {
+      font-size: 14px; color: var(--text-secondary);
+      letter-spacing: 0.2px; margin-top: 12px; margin-left: 2px;
+    }
+    .footer-nav {
+      display: flex; flex-direction: column; gap: 14px; align-items: flex-end;
+      padding-top: 6px;
+    }
+    .footer-nav a {
+      font-size: 14px; color: var(--text-secondary); text-decoration: none;
+      transition: color 0.15s;
+    }
+    .footer-nav a:hover { color: var(--text); }
+    .footer-bottom {
+      display: flex; justify-content: space-between; align-items: center;
+      padding-top: 24px;
+    }
+    .footer-sponsors { display: flex; gap: 10px; }
+    .footer-sponsor-chip {
+      font-size: 10px; text-transform: uppercase; letter-spacing: 1.5px;
+      padding: 4px 10px; border: 1px solid var(--border); border-radius: 20px;
+      color: var(--text-secondary);
+    }
+    .footer-copy { font-size: 12px; color: var(--text-secondary); }
 
     /* ── FADE IN ── */
     .fade-in { opacity: 0; transform: translateY(40px); transition: opacity 0.8s ease, transform 0.8s ease; }
@@ -519,9 +547,9 @@
     .fill-visual     { background: #c4623e; }
     .fill-prefrontal { background: #5fa832; }
 
-    /* ── TEAM SECTION — Aletheia editorial style ── */
+    /* ── TEAM SECTION ── */
     .team-section {
-      padding: 80px 48px 100px; border-top: 1px solid var(--border);
+      padding: 80px 48px 0; border-top: 1px solid var(--border);
     }
     .team-eyebrow {
       font-size: 10px; text-transform: uppercase; letter-spacing: 3px;
@@ -532,8 +560,7 @@
       gap: 0; border-left: 1px solid var(--border);
     }
     .team-card {
-      display: flex; flex-direction: column;
-      padding: 40px 36px;
+      display: flex; flex-direction: column; padding: 40px 36px;
       text-decoration: none; color: var(--text);
       border-right: 1px solid var(--border);
       border-bottom: 1px solid var(--border);
@@ -543,21 +570,16 @@
     body.dark-mode .team-card:hover { background: rgba(255,255,255,0.02); }
     .team-avatar {
       width: 64px; height: 64px; border-radius: 50%;
-      object-fit: cover; margin-bottom: 24px;
-      filter: grayscale(20%);
+      object-fit: cover; margin-bottom: 24px; filter: grayscale(15%);
     }
     .team-name {
       font-family: 'Space Grotesk', sans-serif; font-size: 20px;
       font-weight: 600; letter-spacing: -0.5px; line-height: 1.1;
     }
-    .team-handle {
-      font-size: 12px; color: var(--accent); margin-top: 6px;
-      font-weight: 500; letter-spacing: 0.3px;
-    }
-    .team-bio {
-      font-size: 13px; color: var(--text-secondary);
-      line-height: 1.6; margin-top: 12px;
-    }
+    .team-handle { font-size: 12px; color: var(--accent); margin-top: 6px; font-weight: 500; }
+    .team-bio { font-size: 13px; color: var(--text-secondary); line-height: 1.6; margin-top: 12px; }
+
+    /* ── FOOTER ── */
 
     /* dotted background — Aletheia style */
     .dot-bg {
@@ -715,30 +737,55 @@
             <div class="team-handle">@LCS3002</div>
             <div class="team-bio">Architecture @ UCL · London / Tyrol</div>
           </a>
-          <a href="https://github.com/gunjyo0817" target="_blank" rel="noopener" class="team-card">
-            <img src="https://avatars.githubusercontent.com/u/55885373?v=4" alt="Yi-Chen Hsu" class="team-avatar" />
-            <div class="team-name">Yi-Chen Hsu</div>
-            <div class="team-handle">@gunjyo0817</div>
-            <div class="team-bio">CS @ NTHU · exchange TUM</div>
+          <a href="https://github.com/kayaclaridge-sys" target="_blank" rel="noopener" class="team-card">
+            <img src="https://avatars.githubusercontent.com/u/244161105?v=4" alt="Kaya Claridge" class="team-avatar" />
+            <div class="team-name">Kaya Claridge</div>
+            <div class="team-handle">@kayaclaridge-sys</div>
+            <div class="team-bio">&nbsp;</div>
           </a>
-          <a href="https://github.com/prmilos" target="_blank" rel="noopener" class="team-card">
-            <img src="https://avatars.githubusercontent.com/u/275145155?v=4" alt="Miloš Preradović" class="team-avatar" />
-            <div class="team-name">Miloš Preradović</div>
-            <div class="team-handle">@prmilos</div>
-            <div class="team-bio">Economics &amp; Engineering @ TU Vienna</div>
+          <a href="https://github.com/Vinuitik" target="_blank" rel="noopener" class="team-card">
+            <img src="https://avatars.githubusercontent.com/u/142442543?v=4" alt="Vinuitik" class="team-avatar" />
+            <div class="team-name">Vinuitik</div>
+            <div class="team-handle">@Vinuitik</div>
+            <div class="team-bio">&nbsp;</div>
           </a>
         </div>
       </div>
     </section>
 
     <footer class="footer">
-      <div class="footer-logo">Resonance</div>
-      <div class="footer-links">
-        <a href="#">GitHub</a>
-        <a href="#">API</a>
-        <a href="#">MCP</a>
+      <div class="footer-top">
+        <div class="footer-brand">
+          <div class="footer-brand-row">
+            <!-- Minimal brain icon -->
+            <svg class="footer-icon" width="36" height="28" viewBox="0 0 36 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M18 3 C13 3 8 6 7 10 C6 14 7 18 10 21 C12 23 15 24 18 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/>
+              <path d="M18 3 C23 3 28 6 29 10 C30 14 29 18 26 21 C24 23 21 24 18 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/>
+              <path d="M18 4 L18 23" stroke="currentColor" stroke-width="1" stroke-dasharray="2.5 2.5" opacity="0.35"/>
+              <path d="M9 12 C10.5 10 13 11 12.5 13.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" fill="none" opacity="0.55"/>
+              <path d="M27 12 C25.5 10 23 11 23.5 13.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" fill="none" opacity="0.55"/>
+              <path d="M10 17 C11.5 15.5 13.5 16.5 13 18.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" fill="none" opacity="0.4"/>
+              <path d="M26 17 C24.5 15.5 22.5 16.5 23 18.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" fill="none" opacity="0.4"/>
+            </svg>
+            <div class="footer-logo">Resonance</div>
+          </div>
+          <div class="footer-tagline">Neural Ad Intelligence</div>
+        </div>
+        <nav class="footer-nav">
+          <a href="#">GitHub</a>
+          <a href="#">API Docs</a>
+          <a href="#">MCP Endpoint</a>
+        </nav>
       </div>
-      <div class="footer-copy">© 2026 Resonance · Cursor × Thrad London</div>
+      <div class="footer-bottom">
+        <div class="footer-sponsors">
+          <span class="footer-sponsor-chip">Tavily</span>
+          <span class="footer-sponsor-chip">Overmind</span>
+          <span class="footer-sponsor-chip">Alpic</span>
+          <span class="footer-sponsor-chip">Cursor</span>
+        </div>
+        <div class="footer-copy">© 2026 Resonance · Cursor × Thrad London</div>
+      </div>
     </footer>
 
   </div>
