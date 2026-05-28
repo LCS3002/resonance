@@ -243,11 +243,12 @@
     .footer-icon { flex-shrink: 0; color: var(--accent); }
     .footer-logo {
       font-family: 'Space Grotesk', sans-serif; font-weight: 700;
-      font-size: 42px; letter-spacing: -2px; line-height: 1;
+      font-size: clamp(52px, 8vw, 88px);
+      letter-spacing: -4px; line-height: 0.9;
     }
     .footer-tagline {
-      font-size: 14px; color: var(--text-secondary);
-      letter-spacing: 0.2px; margin-top: 12px; margin-left: 2px;
+      font-size: 13px; color: var(--text-secondary);
+      letter-spacing: 0.2px; margin-top: 10px; margin-left: 4px;
     }
     .footer-nav {
       display: flex; flex-direction: column; gap: 14px; align-items: flex-end;
@@ -581,15 +582,6 @@
 
     /* ── FOOTER ── */
 
-    /* dotted background — Aletheia style */
-    .dot-bg {
-      position: fixed; inset: 0; z-index: 0; pointer-events: none;
-      background-image: radial-gradient(circle, rgba(26,24,24,0.16) 1.2px, transparent 1.2px);
-      background-size: 24px 24px;
-    }
-    body.dark-mode .dot-bg {
-      background-image: radial-gradient(circle, rgba(255,255,255,0.10) 1.2px, transparent 1.2px);
-    }
 
     /* ── BRAIN PULSE ── */
     @keyframes brainPulse {
@@ -620,7 +612,8 @@
 </head>
 <body>
 
-  <div class="dot-bg"></div>
+  <!-- constellation canvas — behind everything -->
+  <canvas id="constellationCanvas" style="position:fixed;inset:0;z-index:0;pointer-events:none;"></canvas>
   <div id="loadingOverlay">
     <div class="loading-spin"></div>
     <div class="loading-label">Loading neural mesh</div>
@@ -633,15 +626,18 @@
     <svg class="icon-sun"  viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><g stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></g></svg>
   </button>
 
-  <div class="activation-legend" id="activationLegend">
-    <div class="legend-title">Neural Activation</div>
-    <div class="legend-item"><div class="legend-dot" style="background:#4a9fd4"></div><span>Language cortex</span></div>
-    <div class="legend-item"><div class="legend-dot" style="background:#c4623e"></div><span>Visual cortex</span></div>
-    <div class="legend-item"><div class="legend-dot" style="background:#5fa832"></div><span>Prefrontal (attention)</span></div>
-  </div>
 
   <nav>
-    <div class="logo">Resonance</div>
+    <div class="logo" style="display:flex;align-items:center;gap:9px;">
+      <svg width="20" height="15" viewBox="0 0 36 28" fill="none" style="flex-shrink:0;opacity:0.9;">
+        <path d="M18 3 C13 3 8 6 7 10 C6 14 7 18 10 21 C12 23 15 24 18 24" stroke="white" stroke-width="2.2" stroke-linecap="round" fill="none"/>
+        <path d="M18 3 C23 3 28 6 29 10 C30 14 29 18 26 21 C24 23 21 24 18 24" stroke="white" stroke-width="2.2" stroke-linecap="round" fill="none"/>
+        <path d="M18 4.5 L18 22.5" stroke="white" stroke-width="1" stroke-dasharray="2.5 2.5" opacity="0.4"/>
+        <path d="M9 12 C10.5 10 13 11 12.5 13.5" stroke="white" stroke-width="1.2" stroke-linecap="round" fill="none" opacity="0.5"/>
+        <path d="M27 12 C25.5 10 23 11 23.5 13.5" stroke="white" stroke-width="1.2" stroke-linecap="round" fill="none" opacity="0.5"/>
+      </svg>
+      Resonance
+    </div>
     <div class="nav-links">
       <a href="#">Overview</a>
       <a href="#">Pipeline</a>
@@ -731,12 +727,6 @@
       <div class="fade-in">
         <div class="team-eyebrow">Built at Cursor × Thrad · London · 2026</div>
         <div class="team-grid">
-          <a href="https://github.com/LCS3002" target="_blank" rel="noopener" class="team-card">
-            <img src="https://avatars.githubusercontent.com/u/214897450?v=4" alt="Lorenz Huber" class="team-avatar" />
-            <div class="team-name">Lorenz Huber</div>
-            <div class="team-handle">@LCS3002</div>
-            <div class="team-bio">Architecture @ UCL · London / Tyrol</div>
-          </a>
           <a href="https://github.com/kayaclaridge-sys" target="_blank" rel="noopener" class="team-card">
             <img src="https://avatars.githubusercontent.com/u/244161105?v=4" alt="Kaya Claridge" class="team-avatar" />
             <div class="team-name">Kaya Claridge</div>
@@ -744,10 +734,16 @@
             <div class="team-bio">&nbsp;</div>
           </a>
           <a href="https://github.com/Vinuitik" target="_blank" rel="noopener" class="team-card">
-            <img src="https://avatars.githubusercontent.com/u/142442543?v=4" alt="Vinuitik" class="team-avatar" />
-            <div class="team-name">Vinuitik</div>
+            <img src="https://avatars.githubusercontent.com/u/142442543?v=4" alt="Dmytro Syzonenko" class="team-avatar" />
+            <div class="team-name">Dmytro Syzonenko</div>
             <div class="team-handle">@Vinuitik</div>
             <div class="team-bio">&nbsp;</div>
+          </a>
+          <a href="https://github.com/LCS3002" target="_blank" rel="noopener" class="team-card">
+            <img src="https://avatars.githubusercontent.com/u/214897450?v=4" alt="Lorenz Huber" class="team-avatar" />
+            <div class="team-name">Lorenz Huber</div>
+            <div class="team-handle">@LCS3002</div>
+            <div class="team-bio">Architecture @ UCL · London</div>
           </a>
         </div>
       </div>
@@ -855,7 +851,7 @@
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.toneMapping         = THREE.ACESFilmicToneMapping;
     renderer.toneMappingExposure = 1.15;
-    renderer.setClearColor(0xEDE7E1, 1);
+    renderer.setClearColor(0x000000, 0); // transparent — CSS background shows through
 
     const scene  = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(42, window.innerWidth / window.innerHeight, 0.01, 100);
@@ -893,7 +889,7 @@
       isDark = !isDark;
       document.body.classList.toggle('dark-mode', isDark);
       scene.environment = await loadHDRI(isDark ? HDRI_DARK : HDRI_LIGHT);
-      renderer.setClearColor(isDark ? 0x141414 : 0xEDE7E1, 1);
+      renderer.setClearColor(0x000000, 0); // keep transparent in both modes
       renderer.toneMappingExposure = isDark ? 1.3 : 1.0;
       updateBrainColors();
     });
@@ -1085,7 +1081,7 @@
       targetScroll = sh > 0 ? window.scrollY / sh : 0;
     });
 
-    const legend = document.getElementById('activationLegend');
+    const legend = null; // removed
 
     const fadeEls = document.querySelectorAll('.fade-in');
     const observer = new IntersectionObserver(entries => {
@@ -1118,7 +1114,7 @@
         activationPrefrontal += (targetPrefrontal - activationPrefrontal) * 0.04;
       }
 
-      legend.classList.toggle('visible', scrollProgress > 0.08);
+      // legend removed
 
       colorTimer++;
       if (colorTimer % 2 === 0) updateBrainColors();
@@ -1374,6 +1370,77 @@
     function escHtml(s) {
       return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
     }
+  </script>
+
+  <script>
+    // ── Constellation animation (Thrad-style stars + lines) ──────────────────
+    (function() {
+      const cc  = document.getElementById('constellationCanvas');
+      const ctx = cc.getContext('2d');
+      let W, H;
+
+      function resize() {
+        W = cc.width  = window.innerWidth;
+        H = cc.height = window.innerHeight;
+      }
+      resize();
+      window.addEventListener('resize', resize);
+
+      const N = 68;
+      const pts = Array.from({length: N}, () => ({
+        x:  Math.random() * window.innerWidth,
+        y:  Math.random() * window.innerHeight,
+        vx: (Math.random() - 0.5) * 0.18,
+        vy: (Math.random() - 0.5) * 0.14,
+        r:  Math.random() * 1.4 + 0.7,
+        pulse: Math.random() * Math.PI * 2,
+      }));
+
+      const MAX_DIST = 190;
+
+      function isDarkMode() { return document.body.classList.contains('dark-mode'); }
+
+      function draw() {
+        ctx.clearRect(0, 0, W, H);
+        const dark = isDarkMode();
+        const base = dark ? '255,255,255' : '26,24,22';
+
+        pts.forEach(p => {
+          p.x = (p.x + p.vx + W) % W;
+          p.y = (p.y + p.vy + H) % H;
+          p.pulse += 0.012;
+        });
+
+        // Lines
+        ctx.lineWidth = 0.55;
+        for (let i = 0; i < N; i++) {
+          for (let j = i + 1; j < N; j++) {
+            const dx = pts[i].x - pts[j].x, dy = pts[i].y - pts[j].y;
+            const d  = Math.sqrt(dx*dx + dy*dy);
+            if (d < MAX_DIST) {
+              const a = (1 - d / MAX_DIST) * (dark ? 0.18 : 0.13);
+              ctx.strokeStyle = `rgba(${base},${a})`;
+              ctx.beginPath();
+              ctx.moveTo(pts[i].x, pts[i].y);
+              ctx.lineTo(pts[j].x, pts[j].y);
+              ctx.stroke();
+            }
+          }
+        }
+
+        // Dots
+        pts.forEach(p => {
+          const a = (dark ? 0.35 : 0.22) + Math.sin(p.pulse) * 0.08;
+          ctx.fillStyle = `rgba(${base},${a})`;
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+          ctx.fill();
+        });
+
+        requestAnimationFrame(draw);
+      }
+      draw();
+    })();
   </script>
 
 </body>
