@@ -1,0 +1,1117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Resonance — Neural Ad Intelligence</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Space+Grotesk:wght@400;500;600;700&display=swap');
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --bg: #F2EDE9;
+      --text: #1A1818;
+      --text-secondary: #6b6b6b;
+      --accent: #EC521B;
+      --light: #EDE8E4;
+      --border: rgba(0,0,0,0.08);
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      overflow-x: hidden;
+    }
+
+    canvas#brainCanvas {
+      position: fixed; top: 0; left: 0;
+      width: 100vw; height: 100vh;
+      z-index: 1; pointer-events: auto; cursor: grab;
+    }
+    canvas#brainCanvas:active { cursor: grabbing; }
+
+    .scroll-container { position: relative; z-index: 2; pointer-events: none; }
+    .scroll-container section { pointer-events: auto; }
+
+    /* ── NAV ── */
+    nav {
+      position: fixed; top: 0; left: 0; width: 100%; z-index: 100;
+      padding: 24px 48px;
+      display: flex; justify-content: space-between; align-items: center;
+      mix-blend-mode: difference;
+    }
+    nav .logo {
+      font-family: 'Space Grotesk', sans-serif; font-weight: 700;
+      font-size: 18px; color: #fff; letter-spacing: -0.5px;
+    }
+    nav .nav-links { display: flex; gap: 32px; margin-right: 60px; }
+    nav .nav-links a {
+      color: #fff; text-decoration: none;
+      font-size: 13px; font-weight: 400; letter-spacing: 0.5px; text-transform: uppercase;
+    }
+
+    /* ── DARK MODE TOGGLE ── */
+    .mode-toggle {
+      position: fixed; top: 20px; right: 48px; z-index: 200;
+      width: 32px; height: 32px; border-radius: 50%;
+      border: 1px solid rgba(0,0,0,0.15); background: rgba(255,255,255,0.25);
+      backdrop-filter: blur(8px); cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: background 0.4s, border-color 0.4s;
+    }
+    .mode-toggle:hover { background: rgba(255,255,255,0.45); }
+    .mode-toggle svg { width: 14px; height: 14px; fill: var(--text); transition: fill 0.4s; }
+    .mode-toggle .icon-moon { display: block; }
+    .mode-toggle .icon-sun  { display: none; }
+
+    body.dark-mode {
+      --bg: #141414; --text: #e8e8e8;
+      --text-secondary: #888; --accent: #FF5A2A; --light: #1e1e1e;
+      --border: rgba(255,255,255,0.08);
+    }
+    body.dark-mode .mode-toggle { border-color: rgba(255,255,255,0.15); background: rgba(0,0,0,0.35); }
+    body.dark-mode .mode-toggle:hover { background: rgba(0,0,0,0.55); }
+    body.dark-mode .mode-toggle .icon-moon { display: none; }
+    body.dark-mode .mode-toggle .icon-sun  { display: block; }
+    body.dark-mode .specs-grid { background: rgba(255,255,255,0.08); }
+    body.dark-mode .spec-cell { background: var(--bg); }
+    body.dark-mode .feature-list li { border-bottom-color: var(--border); }
+    body.dark-mode .footer { border-top-color: var(--border); background: rgba(20,20,20,0.8); }
+
+    /* ── LOADING OVERLAY ── */
+    #loadingOverlay {
+      position: fixed; inset: 0; z-index: 500; background: var(--bg);
+      display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px;
+      transition: opacity 0.6s ease;
+    }
+    #loadingOverlay.hidden { opacity: 0; pointer-events: none; }
+    .loading-spin {
+      width: 40px; height: 40px; border-radius: 50%;
+      border: 2px solid rgba(196,93,62,0.2); border-top-color: var(--accent);
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .loading-label {
+      font-family: 'Space Grotesk', sans-serif; font-size: 12px;
+      letter-spacing: 3px; text-transform: uppercase; color: var(--text-secondary);
+    }
+
+    /* ── HERO ── */
+    .hero {
+      height: 100vh; display: flex; flex-direction: column;
+      justify-content: flex-end; padding: 48px; position: relative;
+    }
+    .hero-content { max-width: 520px; }
+    .hero .eyebrow {
+      font-size: 11px; text-transform: uppercase; letter-spacing: 3px;
+      color: var(--accent); font-weight: 600; margin-bottom: 16px;
+    }
+    .hero h1 {
+      font-family: 'Space Grotesk', sans-serif; font-size: 72px;
+      font-weight: 700; line-height: 0.95; letter-spacing: -3px; margin-bottom: 20px;
+    }
+    .hero p {
+      font-size: 15px; color: var(--text-secondary); line-height: 1.7; max-width: 400px;
+    }
+    .hero .scroll-hint {
+      position: absolute; bottom: 48px; right: 48px;
+      display: flex; flex-direction: column; align-items: center; gap: 8px;
+    }
+    .scroll-hint span {
+      font-size: 11px; text-transform: uppercase; letter-spacing: 2px;
+      color: var(--text-secondary); writing-mode: vertical-rl;
+    }
+    .scroll-hint .line {
+      width: 1px; height: 60px; background: var(--text-secondary);
+      animation: scrollPulse 2s ease-in-out infinite;
+    }
+    @keyframes scrollPulse {
+      0%, 100% { opacity: 0.3; transform: scaleY(0.5); }
+      50%       { opacity: 1;   transform: scaleY(1); }
+    }
+
+    /* ── ACTIVATION LEGEND ── */
+    .activation-legend {
+      position: fixed; bottom: 80px; left: 48px; z-index: 50;
+      display: flex; flex-direction: column; gap: 8px;
+      opacity: 0; transition: opacity 0.5s ease; pointer-events: none;
+    }
+    .activation-legend.visible { opacity: 1; }
+    .legend-title {
+      font-size: 10px; text-transform: uppercase; letter-spacing: 2px;
+      color: var(--text-secondary); margin-bottom: 4px;
+    }
+    .legend-item { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--text-secondary); }
+    .legend-dot { width: 8px; height: 8px; border-radius: 50%; }
+
+    /* ── SECTIONS ── */
+    .info-section {
+      min-height: 100vh; display: flex; align-items: center;
+      padding: 80px 48px; position: relative;
+    }
+    .info-section .text-block { max-width: 420px; }
+    .info-section.left  .text-block { margin-right: auto; }
+    .info-section.right .text-block { margin-left: auto; }
+    .info-section .label {
+      font-size: 11px; text-transform: uppercase; letter-spacing: 3px;
+      color: var(--accent); margin-bottom: 16px; font-weight: 600;
+    }
+    .info-section h2 {
+      font-family: 'Space Grotesk', sans-serif; font-size: 42px;
+      font-weight: 600; line-height: 1.1; letter-spacing: -1.5px; margin-bottom: 20px;
+    }
+    .info-section p { font-size: 15px; color: var(--text-secondary); line-height: 1.8; }
+    .info-section .stats { display: flex; gap: 40px; margin-top: 32px; }
+    .info-section .stat-item .number {
+      font-family: 'Space Grotesk', sans-serif; font-size: 36px; font-weight: 700; color: var(--text);
+    }
+    .info-section .stat-item .stat-label {
+      font-size: 12px; color: var(--text-secondary); text-transform: uppercase;
+      letter-spacing: 1px; margin-top: 4px;
+    }
+
+    .region-tag {
+      display: inline-block; font-size: 11px; font-weight: 600; letter-spacing: 1px;
+      text-transform: uppercase; padding: 4px 10px; border-radius: 2px;
+      margin-top: 16px; margin-right: 6px;
+    }
+    .tag-language   { background: rgba(100,180,255,0.12); color: #4a9fd4; }
+    .tag-visual     { background: rgba(255,120,50,0.10);  color: #c4623e; }
+    .tag-prefrontal { background: rgba(150,220,80,0.12);  color: #5fa832; }
+    body.dark-mode .tag-language   { background: rgba(100,180,255,0.08); }
+    body.dark-mode .tag-visual     { background: rgba(255,120,50,0.08);  }
+    body.dark-mode .tag-prefrontal { background: rgba(150,220,80,0.08);  }
+
+    /* sponsor chips */
+    .sponsor-chip {
+      display: inline-block; font-size: 10px; letter-spacing: 1px;
+      text-transform: uppercase; padding: 3px 8px; border-radius: 2px;
+      margin-top: 12px; margin-right: 4px;
+      border: 1px solid var(--border); color: var(--text-secondary);
+    }
+
+    /* ── SPECS ── */
+    .specs-strip {
+      min-height: 50vh; display: flex; align-items: center;
+      justify-content: center; padding: 40px 48px;
+    }
+    .specs-grid {
+      display: grid; grid-template-columns: repeat(4, 1fr);
+      gap: 1px; background: rgba(0,0,0,0.08); width: 100%; max-width: 1000px;
+    }
+    .spec-cell { background: var(--bg); padding: 40px 32px; text-align: center; }
+    .spec-cell .spec-value {
+      font-family: 'Space Grotesk', sans-serif; font-size: 28px;
+      font-weight: 600; margin-bottom: 8px;
+    }
+    .spec-cell .spec-name {
+      font-size: 11px; text-transform: uppercase; letter-spacing: 2px; color: var(--text-secondary);
+    }
+
+    /* ── FEATURES ── */
+    .features-section {
+      min-height: 100vh; display: flex; align-items: center; padding: 80px 48px;
+    }
+    .features-section .text-block { max-width: 420px; margin-left: auto; }
+    .feature-list { list-style: none; margin-top: 32px; }
+    .feature-list li {
+      padding: 20px 0; border-bottom: 1px solid var(--border);
+      display: flex; justify-content: space-between; align-items: center; font-size: 15px;
+    }
+    .feature-list li .feat-icon {
+      width: 8px; height: 8px; border-radius: 50%; background: var(--accent);
+      flex-shrink: 0;
+    }
+
+    /* ── FOOTER ── */
+    .footer {
+      padding: 60px 48px 120px;
+      display: flex; justify-content: space-between; align-items: flex-end;
+      border-top: 1px solid var(--border);
+      background: rgba(224,222,218,0.8); backdrop-filter: blur(8px);
+    }
+    .footer .footer-logo {
+      font-family: 'Space Grotesk', sans-serif; font-weight: 700;
+      font-size: 24px; letter-spacing: -1px;
+    }
+    .footer .footer-links { display: flex; gap: 24px; }
+    .footer .footer-links a { font-size: 13px; color: var(--text-secondary); text-decoration: none; }
+    .footer .footer-copy { font-size: 12px; color: var(--text-secondary); }
+
+    /* ── FADE IN ── */
+    .fade-in { opacity: 0; transform: translateY(40px); transition: opacity 0.8s ease, transform 0.8s ease; }
+    .fade-in.visible { opacity: 1; transform: translateY(0); }
+
+    /* ── DEMO PANEL (fixed bottom bar) ── */
+    .demo-panel {
+      position: fixed; bottom: 0; left: 0; right: 0; z-index: 300;
+      background: rgba(224,222,218,0.94); backdrop-filter: blur(16px);
+      border-top: 1px solid var(--border);
+      padding: 14px 48px;
+      display: flex; align-items: center; gap: 12px;
+    }
+    body.dark-mode .demo-panel { background: rgba(20,20,20,0.94); }
+    .demo-panel .demo-label {
+      font-family: 'Space Grotesk', sans-serif; font-size: 12px; font-weight: 600;
+      letter-spacing: 1px; text-transform: uppercase; color: var(--accent);
+      white-space: nowrap;
+    }
+    .demo-input {
+      flex: 1; padding: 10px 14px;
+      font-family: 'Inter', sans-serif; font-size: 14px;
+      background: rgba(255,255,255,0.55); color: var(--text);
+      border: 1px solid var(--border); border-radius: 2px; outline: none;
+      transition: border-color 0.2s, background 0.2s;
+    }
+    .demo-input:focus { border-color: var(--accent); background: rgba(255,255,255,0.8); }
+    body.dark-mode .demo-input { background: rgba(255,255,255,0.06); }
+    body.dark-mode .demo-input:focus { background: rgba(255,255,255,0.1); }
+    .demo-btn {
+      padding: 10px 24px; background: var(--accent); color: #fff;
+      font-family: 'Space Grotesk', sans-serif; font-size: 13px; font-weight: 600;
+      letter-spacing: 0.5px; border: none; border-radius: 2px; cursor: pointer;
+      transition: opacity 0.2s; white-space: nowrap;
+    }
+    .demo-btn:hover { opacity: 0.85; }
+    .demo-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .demo-status { font-size: 12px; color: var(--text-secondary); white-space: nowrap; }
+
+    /* ── RESULTS PANEL (slide in from right) ── */
+    .results-panel {
+      position: fixed; top: 0; right: -460px; width: 440px; height: 100vh;
+      z-index: 400; background: var(--bg);
+      border-left: 1px solid var(--border);
+      overflow-y: auto; padding: 72px 24px 100px;
+      transition: right 0.42s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .results-panel.open { right: 0; }
+
+    .results-header {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 20px;
+    }
+    .results-title {
+      font-family: 'Space Grotesk', sans-serif; font-size: 14px;
+      font-weight: 700; letter-spacing: -0.3px;
+    }
+    .results-close {
+      width: 28px; height: 28px; border-radius: 50%;
+      border: 1px solid var(--border); background: transparent; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      color: var(--text-secondary); font-size: 16px; line-height: 1;
+      transition: background 0.2s;
+    }
+    .results-close:hover { background: var(--light); }
+
+    .brand-context {
+      font-size: 12px; color: var(--text-secondary); line-height: 1.6;
+      padding: 10px 12px; background: var(--light); border-radius: 2px;
+      margin-bottom: 16px; border-left: 2px solid var(--accent);
+    }
+    .brand-context-label {
+      font-size: 10px; text-transform: uppercase; letter-spacing: 2px;
+      color: var(--accent); font-weight: 600; margin-bottom: 4px;
+    }
+
+    .result-card {
+      background: var(--light); border-radius: 3px; padding: 18px;
+      margin-bottom: 10px; cursor: pointer; position: relative;
+      border: 1px solid transparent;
+      transition: border-color 0.2s, transform 0.15s;
+    }
+    .result-card:hover { transform: translateY(-1px); }
+    .result-card.selected { border-color: var(--accent); }
+    .result-card.winner { border-color: rgba(196,93,62,0.35); }
+
+    .card-badges { display: flex; gap: 6px; margin-bottom: 10px; }
+    .badge {
+      font-size: 10px; font-weight: 600; letter-spacing: 0.8px;
+      text-transform: uppercase; padding: 3px 8px; border-radius: 2px;
+    }
+    .badge-winner  { background: rgba(196,93,62,0.12); color: var(--accent); }
+    .badge-flag    { background: rgba(220,60,60,0.10);  color: #c04040; }
+    body.dark-mode .badge-flag { background: rgba(220,60,60,0.15); }
+
+    .card-score-row { display: flex; align-items: baseline; gap: 6px; margin-bottom: 8px; }
+    .card-score {
+      font-family: 'Space Grotesk', sans-serif; font-size: 32px;
+      font-weight: 700; line-height: 1;
+    }
+    .card-score-label { font-size: 12px; color: var(--text-secondary); }
+    .card-model-scores { font-size: 11px; color: var(--text-secondary); margin-bottom: 10px; }
+
+    .card-headline {
+      font-family: 'Space Grotesk', sans-serif; font-size: 15px;
+      font-weight: 600; letter-spacing: -0.3px; margin-bottom: 6px;
+    }
+    .card-body { font-size: 13px; color: var(--text-secondary); line-height: 1.6; margin-bottom: 12px; }
+    .card-cta {
+      font-size: 12px; font-weight: 600; color: var(--accent);
+      text-transform: uppercase; letter-spacing: 0.5px;
+    }
+
+    .region-bars { display: flex; flex-direction: column; gap: 6px; margin-top: 12px; }
+    .region-bar-row { display: flex; align-items: center; gap: 8px; }
+    .region-bar-label { font-size: 11px; color: var(--text-secondary); width: 72px; }
+    .region-bar-track {
+      flex: 1; height: 3px; border-radius: 2px;
+      background: rgba(0,0,0,0.08);
+      overflow: hidden;
+    }
+    body.dark-mode .region-bar-track { background: rgba(255,255,255,0.08); }
+    .region-bar-fill { height: 100%; border-radius: 2px; transition: width 0.6s ease; }
+    .fill-language   { background: #4a9fd4; }
+    .fill-visual     { background: #c4623e; }
+    .fill-prefrontal { background: #5fa832; }
+
+    /* ── TEAM SECTION — Aletheia editorial style ── */
+    .team-section {
+      padding: 80px 48px 100px; border-top: 1px solid var(--border);
+    }
+    .team-eyebrow {
+      font-size: 10px; text-transform: uppercase; letter-spacing: 3px;
+      color: var(--text-secondary); font-weight: 500; margin-bottom: 48px;
+    }
+    .team-grid {
+      display: grid; grid-template-columns: repeat(3, 1fr);
+      gap: 0; border-left: 1px solid var(--border);
+    }
+    .team-card {
+      display: flex; flex-direction: column;
+      padding: 40px 36px;
+      text-decoration: none; color: var(--text);
+      border-right: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      transition: background 0.2s;
+    }
+    .team-card:hover { background: rgba(0,0,0,0.02); }
+    body.dark-mode .team-card:hover { background: rgba(255,255,255,0.02); }
+    .team-avatar {
+      width: 64px; height: 64px; border-radius: 50%;
+      object-fit: cover; margin-bottom: 24px;
+      filter: grayscale(20%);
+    }
+    .team-name {
+      font-family: 'Space Grotesk', sans-serif; font-size: 20px;
+      font-weight: 600; letter-spacing: -0.5px; line-height: 1.1;
+    }
+    .team-handle {
+      font-size: 12px; color: var(--accent); margin-top: 6px;
+      font-weight: 500; letter-spacing: 0.3px;
+    }
+    .team-bio {
+      font-size: 13px; color: var(--text-secondary);
+      line-height: 1.6; margin-top: 12px;
+    }
+
+    /* ── BRIEF PILLS ── */
+    .brief-pills { display: flex; gap: 8px; flex-wrap: wrap; }
+    .brief-pill {
+      font-size: 12px; padding: 5px 12px; border-radius: 20px;
+      border: 1px solid var(--border); background: transparent;
+      color: var(--text-secondary); cursor: pointer;
+      transition: background 0.15s, color 0.15s, border-color 0.15s;
+      font-family: 'Inter', sans-serif; white-space: nowrap;
+    }
+    .brief-pill:hover { background: var(--light); color: var(--text); border-color: rgba(0,0,0,0.2); }
+    body.dark-mode .brief-pill:hover { border-color: rgba(255,255,255,0.2); }
+
+    /* ── BRAIN PULSE ── */
+    @keyframes brainPulse {
+      0%   { opacity: 1; }
+      50%  { opacity: 0.6; }
+      100% { opacity: 1; }
+    }
+    canvas#brainCanvas.pulsing { animation: brainPulse 0.4s ease-in-out 2; }
+
+    @media (max-width: 768px) {
+      nav { padding: 16px 24px; }
+      nav .nav-links { display: none; }
+      .mode-toggle { right: 24px; top: 12px; }
+      .hero { padding: 24px; }
+      .hero h1 { font-size: 48px; }
+      .info-section { padding: 60px 24px; }
+      .info-section h2 { font-size: 32px; }
+      .specs-grid { grid-template-columns: repeat(2, 1fr); }
+      .features-section { padding: 60px 24px; }
+      .footer { padding: 40px 24px 120px; flex-direction: column; gap: 24px; align-items: flex-start; }
+      .hero .scroll-hint { display: none; }
+      .activation-legend { display: none; }
+      .demo-panel { padding: 12px 16px; }
+      .results-panel { width: 100vw; right: -100vw; }
+    }
+  </style>
+</head>
+<body>
+
+  <div id="loadingOverlay">
+    <div class="loading-spin"></div>
+    <div class="loading-label">Loading neural mesh</div>
+  </div>
+
+  <canvas id="brainCanvas"></canvas>
+
+  <button class="mode-toggle" id="modeToggle" aria-label="Toggle dark mode">
+    <svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3a7 7 0 0 0 9.79 9.79z"/></svg>
+    <svg class="icon-sun"  viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><g stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></g></svg>
+  </button>
+
+  <div class="activation-legend" id="activationLegend">
+    <div class="legend-title">Neural Activation</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#4a9fd4"></div><span>Language cortex</span></div>
+    <div class="legend-item"><div class="legend-dot" style="background:#c4623e"></div><span>Visual cortex</span></div>
+    <div class="legend-item"><div class="legend-dot" style="background:#5fa832"></div><span>Prefrontal (attention)</span></div>
+  </div>
+
+  <nav>
+    <div class="logo">Resonance</div>
+    <div class="nav-links">
+      <a href="#">Overview</a>
+      <a href="#">Pipeline</a>
+      <a href="#">Scoring</a>
+    </div>
+  </nav>
+
+  <div class="scroll-container">
+
+    <section class="hero">
+      <div class="hero-content fade-in">
+        <div class="eyebrow">Neural Ad Intelligence</div>
+        <h1>Ads That<br>Resonate.</h1>
+        <p>Generate campaign variants, score them against predicted neural engagement, and deploy only what activates. Powered by brain-encoding models trained on fMRI response data.</p>
+        <div style="margin-top:24px; display:flex; gap:8px; flex-wrap:wrap;">
+          <span class="sponsor-chip">Tavily grounded</span>
+          <span class="sponsor-chip">Overmind traced</span>
+          <span class="sponsor-chip">Alpic MCP</span>
+        </div>
+      </div>
+      <div class="scroll-hint"><span>Scroll</span><div class="line"></div></div>
+    </section>
+
+    <section class="info-section left">
+      <div class="text-block fade-in">
+        <div class="label">01 — Generate</div>
+        <h2>Grounded Creative Generation</h2>
+        <p>A Claude agent grounds your brief in live brand and competitor context via Tavily research, then generates three distinct ad variants — headline, body copy, and image prompt — calibrated to chat-native placement.</p>
+        <div class="stats">
+          <div class="stat-item"><div class="number">3</div><div class="stat-label">Variants</div></div>
+          <div class="stat-item"><div class="number">&lt;2s</div><div class="stat-label">Generation</div></div>
+        </div>
+        <span class="region-tag tag-language">Language cortex</span>
+        <span class="sponsor-chip" style="margin-top:16px;">Tavily research</span>
+      </div>
+    </section>
+
+    <section class="info-section right">
+      <div class="text-block fade-in">
+        <div class="label">02 — Score</div>
+        <h2>Dual Neural Engagement Scoring</h2>
+        <p>Each variant is scored by two models in parallel: TribeV2 (Meta's fMRI brain encoder) and your custom BrainDecoder. The weighted combined score predicts neural engagement across visual cortex, language areas, and prefrontal decision circuits — before any impression is served.</p>
+        <div class="stats">
+          <div class="stat-item"><div class="number">2</div><div class="stat-label">Models</div></div>
+          <div class="stat-item"><div class="number">40K</div><div class="stat-label">Brain vertices</div></div>
+        </div>
+        <span class="region-tag tag-visual">Visual cortex</span>
+      </div>
+    </section>
+
+    <section class="specs-strip">
+      <div class="specs-grid fade-in">
+        <div class="spec-cell"><div class="spec-value">2.1s</div><div class="spec-name">Scoring Latency</div></div>
+        <div class="spec-cell"><div class="spec-value">40K</div><div class="spec-name">Mesh Vertices</div></div>
+        <div class="spec-cell"><div class="spec-value">0.45</div><div class="spec-name">HITL Threshold</div></div>
+        <div class="spec-cell"><div class="spec-value">3×</div><div class="spec-name">Engagement Lift</div></div>
+      </div>
+    </section>
+
+    <section class="info-section left">
+      <div class="text-block fade-in">
+        <div class="label">03 — Optimize</div>
+        <h2>Overmind Optimization Loop</h2>
+        <p>Every generation call is traced by Overmind. Human reviewer approvals and rejections feed back into the optimization loop — continuously improving the Claude generation prompts based on which ad copy actually activates the prefrontal attention circuits your audience relies on for decisions.</p>
+        <span class="region-tag tag-prefrontal">Prefrontal (decision)</span>
+        <span class="sponsor-chip" style="margin-top:16px;">Overmind tracing</span>
+      </div>
+    </section>
+
+    <section class="features-section">
+      <div class="text-block fade-in">
+        <div class="label">04 — Deploy</div>
+        <h2>Human-Verified Placement</h2>
+        <ul class="feature-list">
+          <li><span>Real-time neural intent scoring per prompt</span><span class="feat-icon"></span></li>
+          <li><span>Human-in-the-loop escalation at &lt;0.45 threshold</span><span class="feat-icon"></span></li>
+          <li><span>Brand safety guardrails via Claude</span><span class="feat-icon"></span></li>
+          <li><span>Attribution chain: chat → click → conversion</span><span class="feat-icon"></span></li>
+          <li><span>Alpic MCP endpoint — callable from any agent</span><span class="feat-icon"></span></li>
+          <li><span>Overmind autonomous prompt optimization</span><span class="feat-icon"></span></li>
+        </ul>
+        <span class="sponsor-chip" style="margin-top:24px;">Alpic MCP</span>
+        <span class="sponsor-chip" style="margin-top:24px;">Cursor SDK</span>
+      </div>
+    </section>
+
+    <!-- ── TEAM SECTION ── -->
+    <section class="team-section">
+      <div class="fade-in">
+        <div class="team-eyebrow">Built at Cursor × Thrad · London · 2026</div>
+        <div class="team-grid">
+          <a href="https://github.com/LCS3002" target="_blank" rel="noopener" class="team-card">
+            <img src="https://avatars.githubusercontent.com/u/214897450?v=4" alt="Lorenz Huber" class="team-avatar" />
+            <div class="team-name">Lorenz Huber</div>
+            <div class="team-handle">@LCS3002</div>
+            <div class="team-bio">Architecture @ UCL · London / Tyrol</div>
+          </a>
+          <a href="https://github.com/gunjyo0817" target="_blank" rel="noopener" class="team-card">
+            <img src="https://avatars.githubusercontent.com/u/55885373?v=4" alt="Yi-Chen Hsu" class="team-avatar" />
+            <div class="team-name">Yi-Chen Hsu</div>
+            <div class="team-handle">@gunjyo0817</div>
+            <div class="team-bio">CS @ NTHU · exchange TUM</div>
+          </a>
+          <a href="https://github.com/prmilos" target="_blank" rel="noopener" class="team-card">
+            <img src="https://avatars.githubusercontent.com/u/275145155?v=4" alt="Miloš Preradović" class="team-avatar" />
+            <div class="team-name">Miloš Preradović</div>
+            <div class="team-handle">@prmilos</div>
+            <div class="team-bio">Economics &amp; Engineering @ TU Vienna</div>
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <footer class="footer">
+      <div class="footer-logo">Resonance</div>
+      <div class="footer-links">
+        <a href="#">GitHub</a>
+        <a href="#">API</a>
+        <a href="#">MCP</a>
+      </div>
+      <div class="footer-copy">© 2026 Resonance · Cursor × Thrad London</div>
+    </footer>
+
+  </div>
+
+  <!-- ── DEMO PANEL ── -->
+  <div class="demo-panel" style="flex-direction:column; align-items:stretch; gap:8px; padding-top:10px; padding-bottom:10px;">
+    <div style="display:flex; align-items:center; gap:12px;">
+      <span class="demo-label">Try live</span>
+      <input
+        type="text"
+        class="demo-input"
+        id="briefInput"
+        placeholder="Describe your campaign brief…"
+        autocomplete="off"
+      />
+      <button class="demo-btn" id="analyseBtn">Analyse</button>
+      <span class="demo-status" id="demoStatus"></span>
+    </div>
+    <div style="padding-left:68px; display:flex; gap:16px; align-items:center; flex-wrap:wrap;">
+      <div style="display:flex; gap:6px; align-items:center;">
+        <span style="font-size:11px; text-transform:uppercase; letter-spacing:1.5px; color:var(--text-secondary); white-space:nowrap;">Target emotion</span>
+        <select id="emotionSelect" style="font-size:12px; font-family:inherit; background:transparent; border:1px solid var(--border); border-radius:2px; padding:4px 8px; color:var(--text); cursor:pointer; outline:none;">
+          <option value="">— any —</option>
+          <option value="aspirational">Aspirational</option>
+          <option value="trustworthy">Trustworthy</option>
+          <option value="urgent">Urgent</option>
+          <option value="playful">Playful</option>
+          <option value="premium">Premium</option>
+        </select>
+      </div>
+      <div class="brief-pills">
+        <button class="brief-pill" data-brief="luxury electric SUV for London families">Tesla EV · London</button>
+        <button class="brief-pill" data-brief="sustainable running trainers for Gen Z athletes">Nike · Gen Z</button>
+        <button class="brief-pill" data-brief="Spotify Premium for busy professionals who commute">Spotify · commuters</button>
+        <button class="brief-pill" data-brief="premium noise-cancelling headphones for open-plan offices">Sony WH · office</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── RESULTS PANEL ── -->
+  <div class="results-panel" id="resultsPanel">
+    <div class="results-header">
+      <div class="results-title">Campaign Results</div>
+      <button class="results-close" id="closeResults">×</button>
+    </div>
+    <div id="brandContextBox"></div>
+    <div id="resultsInner"></div>
+  </div>
+
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.163.0/build/three.module.js",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.163.0/examples/jsm/"
+    }
+  }
+  </script>
+
+  <script type="module">
+    import * as THREE from 'three';
+    import { RGBELoader } from 'three/addons/loaders/RGBELoader.js';
+
+    // ── Renderer ──────────────────────────────────────────────────────────────
+    const canvas   = document.getElementById('brainCanvas');
+    const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.toneMapping         = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.0;
+    renderer.setClearColor(0xF2EDE9, 1);
+
+    const scene  = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(42, window.innerWidth / window.innerHeight, 0.01, 100);
+    camera.position.set(0, 0, 3.2);
+
+    scene.add(new THREE.AmbientLight(0xffffff, 0.5));
+    const dl1 = new THREE.DirectionalLight(0xffffff, 2.0); dl1.position.set(4,5,4);   scene.add(dl1);
+    const dl2 = new THREE.DirectionalLight(0xc4a882, 1.0); dl2.position.set(-3,2,-2); scene.add(dl2);
+    const dl3 = new THREE.DirectionalLight(0x8899bb, 0.6); dl3.position.set(0,-3,3);  scene.add(dl3);
+
+    const HDRI_LIGHT = 'https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/1k/citrus_orchard_road_puresky_1k.hdr';
+    const HDRI_DARK  = 'https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/1k/qwantani_dusk_2_1k.hdr';
+    const hdriCache  = {};
+
+    function loadHDRI(url) {
+      return new Promise(resolve => {
+        if (hdriCache[url]) { resolve(hdriCache[url]); return; }
+        new RGBELoader().load(url, tex => {
+          tex.mapping = THREE.EquirectangularReflectionMapping;
+          hdriCache[url] = tex;
+          resolve(tex);
+        });
+      });
+    }
+    loadHDRI(HDRI_LIGHT).then(t => { scene.environment = t; });
+    loadHDRI(HDRI_DARK);
+
+    let isDark = false;
+    document.getElementById('modeToggle').addEventListener('click', async () => {
+      isDark = !isDark;
+      document.body.classList.toggle('dark-mode', isDark);
+      scene.environment = await loadHDRI(isDark ? HDRI_DARK : HDRI_LIGHT);
+      renderer.setClearColor(isDark ? 0x141414 : 0xF2EDE9, 1);
+      renderer.toneMappingExposure = isDark ? 1.3 : 1.0;
+      updateBrainColors();
+    });
+
+    // ── Brain mesh ────────────────────────────────────────────────────────────
+    let brain = null, brainGeo = null, sulcData = null;
+    let regionWeights = null, nVerts = 0, colorAttr = null;
+
+    function hotColor(t) {
+      t = Math.max(0, Math.min(1, t));
+      if (t < 0.33) return [t * 3, 0, 0];
+      if (t < 0.66) return [1, (t - 0.33) * 3, 0];
+      return [1, 1, (t - 0.66) * 3];
+    }
+
+    function vertexColor(sulcVal, activation) {
+      const baseMin = isDark ? 0.12 : 0.50;
+      const base    = baseMin + sulcVal * (isDark ? 0.25 : 0.28);
+      const [hr, hg, hb] = hotColor(activation);
+      const blend   = Math.min(1, activation * 1.8);
+      return [base + (hr - base) * blend, base + (hg - base) * blend, base + (hb - base) * blend];
+    }
+
+    function sc(x) { return Math.max(0, Math.min(1, x)); }
+    function smoothstep(a, b, t) {
+      const x = Math.max(0, Math.min(1, (t - a) / (b - a)));
+      return x * x * (3 - 2 * x);
+    }
+
+    function computeRegionWeights(posArr, nLeft) {
+      const n  = posArr.length / 3;
+      const rw = new Float32Array(n * 3);
+      for (let i = 0; i < n; i++) {
+        const x = posArr[i * 3], y = posArr[i * 3 + 1], z = posArr[i * 3 + 2];
+        const visual     = sc((-y - 0.3) / 0.35) * sc(1 - Math.abs(x) * 1.2) * sc(1 - Math.abs(z) * 1.5);
+        const isLeft     = i < nLeft;
+        const lang       = isLeft
+          ? sc((Math.abs(x) - 0.15) / 0.25) * sc(1 - (-y - 0.1) / 0.3) * sc((z + 0.3) / 0.4) * sc(1 - (z - 0.35) / 0.2)
+          : 0;
+        const prefrontal = sc((y - 0.55) / 0.25) * sc((z - 0.1) / 0.35);
+        rw[i * 3]     = visual;
+        rw[i * 3 + 1] = lang;
+        rw[i * 3 + 2] = prefrontal;
+      }
+      return rw;
+    }
+
+    // Current activation values — driven by scroll OR live API results
+    let activationVisual     = 0, activationLanguage   = 0, activationPrefrontal = 0;
+    let targetVisual         = 0, targetLanguage       = 0, targetPrefrontal     = 0;
+    let useApiActivation     = false;
+
+    // Called by demo panel when API results arrive — pulse then settle
+    window.setApiActivation = function(lang, vis, pre) {
+      useApiActivation = true;
+
+      // Flash to full activation
+      activationLanguage = activationVisual = activationPrefrontal = 0.95;
+      updateBrainColors();
+
+      // CSS pulse on canvas
+      canvas.classList.add('pulsing');
+      canvas.addEventListener('animationend', () => canvas.classList.remove('pulsing'), { once: true });
+
+      // After 350ms, start lerping to actual scores
+      setTimeout(() => {
+        targetLanguage   = lang;
+        targetVisual     = vis;
+        targetPrefrontal = pre;
+      }, 350);
+    };
+
+    function updateBrainColors() {
+      if (!colorAttr) return;
+      const col = colorAttr.array;
+      for (let i = 0; i < nVerts; i++) {
+        const sulc = sulcData[i];
+        const act  = Math.min(1,
+          regionWeights[i*3  ] * activationVisual     * 0.85 +
+          regionWeights[i*3+1] * activationLanguage   * 0.85 +
+          regionWeights[i*3+2] * activationPrefrontal * 0.85
+        );
+        const [r, g, b] = vertexColor(sulc, act);
+        col[i*3]   = r;
+        col[i*3+1] = g;
+        col[i*3+2] = b;
+      }
+      colorAttr.needsUpdate = true;
+    }
+
+    fetch('./brain_mesh.json').then(r => r.json()).then(data => {
+      const posArr  = new Float32Array(data.vertices);
+      sulcData       = new Float32Array(data.sulc);
+      nVerts         = posArr.length / 3;
+      regionWeights  = computeRegionWeights(posArr, data.n_left);
+
+      brainGeo = new THREE.BufferGeometry();
+      brainGeo.setAttribute('position', new THREE.BufferAttribute(posArr, 3));
+      brainGeo.setIndex(new THREE.BufferAttribute(new Uint32Array(data.faces), 1));
+      brainGeo.computeVertexNormals();
+
+      const initColors = new Float32Array(nVerts * 3);
+      colorAttr = new THREE.BufferAttribute(initColors, 3);
+      brainGeo.setAttribute('color', colorAttr);
+      updateBrainColors();
+
+      brain = new THREE.Mesh(brainGeo, new THREE.MeshStandardMaterial({
+        vertexColors: true, roughness: 0.82, metalness: 0.08, side: THREE.DoubleSide,
+      }));
+      scene.add(brain);
+
+      document.getElementById('loadingOverlay').classList.add('hidden');
+      setTimeout(() => { document.getElementById('loadingOverlay').style.display = 'none'; }, 700);
+      setTimeout(() => { document.querySelector('.hero .fade-in')?.classList.add('visible'); }, 300);
+    });
+
+    // ── Scroll sections ───────────────────────────────────────────────────────
+    const sections = [
+      { scrollStart: 0,    scrollEnd: 0.15, posX:  0.3, posY: 0,   rotX:  0.1,  rotY: 0.15,      camZ: 3.2, scale: 1.0  },
+      { scrollStart: 0.15, scrollEnd: 0.35, posX:  0.9, posY: 0,   rotX: -0.05, rotY: -0.5,       camZ: 2.8, scale: 1.05 },
+      { scrollStart: 0.35, scrollEnd: 0.55, posX: -0.8, posY: 0.1, rotX:  0.3,  rotY: Math.PI,    camZ: 2.6, scale: 1.05 },
+      { scrollStart: 0.55, scrollEnd: 0.65, posX:  0,   posY: 0,   rotX: -0.4,  rotY: 0.2,        camZ: 3.0, scale: 0.95 },
+      { scrollStart: 0.65, scrollEnd: 0.80, posX:  0.7, posY: 0,   rotX: -0.3,  rotY: 0.6,        camZ: 2.5, scale: 1.08 },
+      { scrollStart: 0.80, scrollEnd: 1.0,  posX: -0.5, posY: 0,   rotX:  0.1,  rotY: Math.PI*2,  camZ: 3.2, scale: 0.95 },
+    ];
+
+    function lerp(a, b, t) { return a + (b - a) * t; }
+
+    let scrollProgress = 0, targetScroll = 0;
+    let isDragging = false, dragStartX = 0, dragStartY = 0;
+    let orbitX = 0, orbitY = 0, targetOrbitX = 0, targetOrbitY = 0;
+    const DRAG_SENS = 0.006, ORBIT_DECAY = 0.04;
+
+    window.addEventListener('pointerdown', e => { isDragging = true; dragStartX = e.clientX; dragStartY = e.clientY; });
+    window.addEventListener('pointermove', e => {
+      if (!isDragging) return;
+      targetOrbitX = (e.clientX - dragStartX) * DRAG_SENS;
+      targetOrbitY = (e.clientY - dragStartY) * DRAG_SENS;
+    });
+    window.addEventListener('pointerup', () => { isDragging = false; dragStartX = dragStartY = 0; });
+    window.addEventListener('scroll', () => {
+      const sh = document.documentElement.scrollHeight - window.innerHeight;
+      targetScroll = sh > 0 ? window.scrollY / sh : 0;
+    });
+
+    const legend = document.getElementById('activationLegend');
+
+    const fadeEls = document.querySelectorAll('.fade-in');
+    const observer = new IntersectionObserver(entries => {
+      entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+    }, { threshold: 0.15 });
+    fadeEls.forEach(el => observer.observe(el));
+
+    window.addEventListener('resize', () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+
+    let colorTimer = 0;
+
+    function animate() {
+      requestAnimationFrame(animate);
+      scrollProgress += (targetScroll - scrollProgress) * 0.06;
+
+      if (useApiActivation) {
+        activationLanguage   += (targetLanguage   - activationLanguage)   * 0.03;
+        activationVisual     += (targetVisual     - activationVisual)     * 0.03;
+        activationPrefrontal += (targetPrefrontal - activationPrefrontal) * 0.03;
+      } else {
+        targetLanguage   = smoothstep(0.12, 0.38, scrollProgress);
+        targetVisual     = smoothstep(0.32, 0.58, scrollProgress);
+        targetPrefrontal = smoothstep(0.58, 0.82, scrollProgress);
+        activationLanguage   += (targetLanguage   - activationLanguage)   * 0.04;
+        activationVisual     += (targetVisual     - activationVisual)     * 0.04;
+        activationPrefrontal += (targetPrefrontal - activationPrefrontal) * 0.04;
+      }
+
+      legend.classList.toggle('visible', scrollProgress > 0.08);
+
+      colorTimer++;
+      if (colorTimer % 2 === 0) updateBrainColors();
+
+      if (brain) {
+        let cur = sections[0], nxt = sections[1], localT = 0;
+        for (let i = 0; i < sections.length; i++) {
+          if (scrollProgress >= sections[i].scrollStart && scrollProgress <= sections[i].scrollEnd) {
+            cur = sections[i];
+            nxt = sections[Math.min(i + 1, sections.length - 1)];
+            localT = smoothstep(cur.scrollStart, cur.scrollEnd, scrollProgress);
+            break;
+          }
+          if (i === sections.length - 1) { cur = nxt = sections[i]; localT = 1; }
+        }
+
+        if (isDragging) { orbitX += (targetOrbitX - orbitX) * 0.12; orbitY += (targetOrbitY - orbitY) * 0.12; }
+        else { orbitX += -orbitX * ORBIT_DECAY; orbitY += -orbitY * ORBIT_DECAY; targetOrbitX += -targetOrbitX * ORBIT_DECAY; targetOrbitY += -targetOrbitY * ORBIT_DECAY; }
+
+        brain.position.x = lerp(cur.posX, nxt.posX, localT);
+        brain.position.y = lerp(cur.posY, nxt.posY, localT);
+        brain.rotation.x = lerp(cur.rotX, nxt.rotX, localT) + orbitY;
+        brain.rotation.y = lerp(cur.rotY, nxt.rotY, localT) + Math.sin(Date.now() * 0.00025) * 0.04 + orbitX;
+        brain.scale.setScalar(lerp(cur.scale, nxt.scale, localT));
+        camera.position.z = lerp(cur.camZ, nxt.camZ, localT);
+      }
+
+      renderer.render(scene, camera);
+    }
+    animate();
+  </script>
+
+  <script>
+    // ── Demo panel logic (non-module so it can call window.setApiActivation) ──
+    const API_BASE = 'http://localhost:8000';
+
+    const briefInput  = document.getElementById('briefInput');
+    const analyseBtn  = document.getElementById('analyseBtn');
+    const demoStatus  = document.getElementById('demoStatus');
+    const resultsPanel = document.getElementById('resultsPanel');
+    const resultsInner = document.getElementById('resultsInner');
+    const brandCtxBox  = document.getElementById('brandContextBox');
+    const closeBtn     = document.getElementById('closeResults');
+
+    closeBtn.addEventListener('click', () => {
+      resultsPanel.classList.remove('open');
+      window.setApiActivation && window.setApiActivation(0, 0, 0);
+    });
+
+    briefInput.addEventListener('keydown', e => { if (e.key === 'Enter') analyseBtn.click(); });
+
+    // Brief pill clicks
+    document.querySelectorAll('.brief-pill').forEach(pill => {
+      pill.addEventListener('click', () => {
+        briefInput.value = pill.dataset.brief;
+        briefInput.focus();
+        analyseBtn.click();
+      });
+    });
+
+    analyseBtn.addEventListener('click', async () => {
+      const brief = briefInput.value.trim();
+      if (!brief) return;
+
+      analyseBtn.disabled = true;
+      analyseBtn.textContent = '…';
+      demoStatus.textContent = 'Researching brand context…';
+
+      try {
+        const targetEmotion = document.getElementById('emotionSelect').value;
+      const res = await fetch(`${API_BASE}/api/campaign`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ brief, num_variants: 3, target_emotion: targetEmotion || null }),
+        });
+
+        if (!res.ok) throw new Error(`API ${res.status}`);
+        const data = await res.json();
+
+        demoStatus.textContent = `${data.variants.length} variants scored`;
+
+        // Drive brain activation from winner
+        const w = data.winner;
+        window.setApiActivation(
+          w.region_scores.language,
+          w.region_scores.visual,
+          w.region_scores.prefrontal,
+        );
+
+        renderResults(data);
+        resultsPanel.classList.add('open');
+      } catch (e) {
+        demoStatus.textContent = e.message.includes('fetch')
+          ? 'Start the API: python -m api.main'
+          : `Error: ${e.message}`;
+      }
+
+      analyseBtn.disabled = false;
+      analyseBtn.textContent = 'Analyse';
+    });
+
+    function scoreColor(s) {
+      if (s >= 0.75) return '#5fa832';
+      if (s >= 0.55) return '#c4a83e';
+      if (s >= 0.45) return '#c4623e';
+      return '#c04040';
+    }
+
+    function renderResults(data) {
+      let topHtml = '';
+
+      // Hero image (DALL-E 3)
+      if (data.hero_image_url) {
+        topHtml += `
+          <div style="margin-bottom:16px; border-radius:4px; overflow:hidden; aspect-ratio:1; background:var(--light);">
+            <img src="${escHtml(data.hero_image_url)}" alt="Campaign hero image"
+                 style="width:100%; height:100%; object-fit:cover; display:block;" />
+          </div>`;
+      }
+
+      // Campaign strategy
+      if (data.strategy) {
+        const bullets = data.strategy.split('\n').filter(l => l.trim());
+        topHtml += `
+          <div style="margin-bottom:16px; padding:14px 16px; background:var(--light); border-radius:3px; border-left:2px solid var(--accent);">
+            <div style="font-size:10px; text-transform:uppercase; letter-spacing:2px; color:var(--accent); font-weight:600; margin-bottom:8px;">Campaign Strategy</div>
+            ${bullets.map(b => `<div style="font-size:13px; color:var(--text-secondary); line-height:1.6; margin-bottom:4px;">${escHtml(b)}</div>`).join('')}
+          </div>`;
+      }
+
+      // Brand context (Tavily)
+      if (data.brand_context) {
+        topHtml += `
+          <div class="brand-context">
+            <div class="brand-context-label">Tavily Research</div>
+            ${escHtml(data.brand_context)}
+          </div>`;
+      }
+
+      brandCtxBox.innerHTML = topHtml;
+
+      // Variant cards
+      resultsInner.innerHTML = data.variants.map((v, i) => `
+        <div class="result-card ${i === 0 ? 'winner' : ''}" data-lang="${v.region_scores.language}" data-vis="${v.region_scores.visual}" data-pre="${v.region_scores.prefrontal}">
+          <div class="card-badges">
+            ${i === 0 ? '<span class="badge badge-winner">Top Variant</span>' : ''}
+            ${v.flagged ? '<span class="badge badge-flag">Human Review Required</span>' : ''}
+          </div>
+          <div class="card-score-row">
+            <div class="card-score" data-target="${Math.round(v.combined_score * 100)}" style="color:${scoreColor(v.combined_score)}">0</div>
+            <div class="card-score-label">/ 100 neural score</div>
+          </div>
+          <div class="card-model-scores">
+            Algonauts: ${Math.round((v.model_scores.algonauts||0) * 100)}
+            &nbsp;·&nbsp; TribeV2: ${Math.round((v.model_scores.tribe||0) * 100)}
+            &nbsp;·&nbsp; Custom: ${Math.round((v.model_scores.custom||0) * 100)}
+          </div>
+          <div class="card-headline">${escHtml(v.headline)}</div>
+          <div class="card-body">${escHtml(v.body)}</div>
+          <div class="card-cta">${escHtml(v.cta)}</div>
+          <div class="region-bars">
+            ${['language','visual','prefrontal'].map(r => `
+              <div class="region-bar-row">
+                <span class="region-bar-label">${r}</span>
+                <div class="region-bar-track">
+                  <div class="region-bar-fill fill-${r}" style="width:${Math.round(v.region_scores[r]*100)}%"></div>
+                </div>
+              </div>`).join('')}
+          </div>
+          <div style="margin-top:10px; display:flex; gap:6px; align-items:center; flex-wrap:wrap;">
+            <span style="font-size:11px; color:var(--text-secondary);">Predicted:</span>
+            <span style="font-size:11px; font-weight:600; color:var(--accent); text-transform:capitalize;">${v.predicted_emotion || '—'}</span>
+            ${v.emotion_match_score != null ? `<span style="font-size:11px; color:var(--text-secondary);">(${Math.round(v.emotion_match_score * 100)}% target match)</span>` : ''}
+          </div>
+          ${v.counterfactual_hint ? `
+            <div style="margin-top:8px; padding:8px 10px; background:rgba(236,82,27,0.06); border-radius:2px; border-left:2px solid var(--accent);">
+              <span style="font-size:10px; text-transform:uppercase; letter-spacing:1px; color:var(--accent); font-weight:600;">Counterfactual hint</span>
+              <div style="font-size:12px; color:var(--text-secondary); margin-top:4px; line-height:1.5;">${escHtml(v.counterfactual_hint)}</div>
+            </div>` : ''}
+          ${v.flagged ? `
+            <div style="margin-top:12px; display:flex; gap:8px;">
+              <button onclick="reviewDecision('${v.id}', true)" style="flex:1; padding:8px; background:var(--accent); color:#fff; border:none; border-radius:2px; font-size:12px; cursor:pointer; font-family:inherit;">Approve</button>
+              <button onclick="reviewDecision('${v.id}', false)" style="flex:1; padding:8px; background:transparent; color:var(--text-secondary); border:1px solid var(--border); border-radius:2px; font-size:12px; cursor:pointer; font-family:inherit;">Reject</button>
+            </div>` : ''}
+        </div>`).join('');
+
+      // Animate score counters after a short delay
+      setTimeout(animateAllCounters, 200);
+
+      // Click card → update brain
+      resultsInner.querySelectorAll('.result-card').forEach(card => {
+        card.addEventListener('click', () => {
+          resultsInner.querySelectorAll('.result-card').forEach(c => c.classList.remove('selected'));
+          card.classList.add('selected');
+          window.setApiActivation(
+            parseFloat(card.dataset.lang),
+            parseFloat(card.dataset.vis),
+            parseFloat(card.dataset.pre),
+          );
+        });
+      });
+    }
+
+    async function reviewDecision(variantId, approved) {
+      try {
+        await fetch(`${API_BASE}/api/review`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ variant_id: variantId, approved }),
+        });
+        demoStatus.textContent = approved ? 'Variant approved — Overmind loop updated' : 'Variant rejected — Overmind loop updated';
+      } catch(e) {
+        demoStatus.textContent = 'Review recorded locally';
+      }
+    }
+
+    function animateCounter(el, target, duration) {
+      duration = duration || 750;
+      const start = performance.now();
+      function tick(now) {
+        const t = Math.min((now - start) / duration, 1);
+        const ease = 1 - Math.pow(1 - t, 3);
+        el.textContent = Math.round(ease * target);
+        if (t < 1) requestAnimationFrame(tick);
+      }
+      requestAnimationFrame(tick);
+    }
+
+    // Animate all score numbers after rendering
+    function animateAllCounters() {
+      document.querySelectorAll('.card-score[data-target]').forEach((el, i) => {
+        const target = parseInt(el.dataset.target, 10);
+        setTimeout(() => animateCounter(el, target, 700), i * 120);
+      });
+    }
+
+    function escHtml(s) {
+      return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+  </script>
+
+</body>
+</html>

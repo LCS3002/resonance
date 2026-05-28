@@ -1,0 +1,19 @@
+fastapi>=0.111.0
+uvicorn[standard]>=0.29.0
+pydantic>=2.7.0
+anthropic>=0.28.0
+tavily-python>=0.3.0
+overmind>=0.1.0
+mcp>=1.0.0
+python-dotenv>=1.0.0
+
+# Neural model dependencies
+torch>=2.2.0
+numpy>=1.26.0
+scikit-learn>=1.4.0
+sentence-transformers>=2.7.0
+
+# TribeV2 reference (install from local path)
+# pip install -e "../Tribe V2 and Neural Predictions/tribe-v2-reference"
+nilearn>=0.10.0
+nibabel>=5.2.0
