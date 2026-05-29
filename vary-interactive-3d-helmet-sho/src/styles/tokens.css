@@ -1,0 +1,17 @@
+:root {
+  --bg: #EDE7E1;
+  --text: #1A1818;
+  --text-secondary: #6b6b6b;
+  --accent: #EC521B;
+  --light: #E6E0D8;
+  --border: rgba(0,0,0,0.09);
+}
+
+body.dark-mode {
+  --bg: #141414;
+  --text: #e8e8e8;
+  --text-secondary: #888;
+  --accent: #FF5A2A;
+  --light: #1e1e1e;
+  --border: rgba(255,255,255,0.08);
+}

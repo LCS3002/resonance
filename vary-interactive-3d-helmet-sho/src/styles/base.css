@@ -1,0 +1,46 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Space+Grotesk:wght@400;500;600;700&display=swap');
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: 'Inter', sans-serif;
+  background: var(--bg);
+  background-image: radial-gradient(circle, rgba(26,24,22,0.13) 1.2px, transparent 1.2px);
+  background-size: 26px 26px;
+  color: var(--text);
+  overflow-x: hidden;
+}
+
+body.dark-mode {
+  background-image: radial-gradient(circle, rgba(255,255,255,0.09) 1.2px, transparent 1.2px);
+}
+
+canvas#brainCanvas {
+  position: fixed; top: 0; left: 0;
+  width: 100vw; height: 100vh;
+  z-index: 1; pointer-events: auto; cursor: grab;
+}
+canvas#brainCanvas:active { cursor: grabbing; }
+canvas#brainCanvas.pulsing { animation: brainPulse 0.4s ease-in-out 2; }
+
+.scroll-container { position: relative; z-index: 2; pointer-events: none; }
+.scroll-container section { pointer-events: auto; }
+
+@media (max-width: 768px) {
+  nav { padding: 16px 24px; }
+  nav .nav-links { display: none; }
+  .mode-toggle { right: 24px; top: 12px; }
+  .hero { padding: 24px; }
+  .hero h1 { font-size: 48px; }
+  .info-section { padding: 60px 24px; }
+  .info-section h2 { font-size: 32px; }
+  .specs-grid { grid-template-columns: repeat(2, 1fr); }
+  .features-section { padding: 60px 24px; }
+  .footer { padding: 40px 24px 120px; flex-direction: column; gap: 24px; align-items: flex-start; }
+  .hero .scroll-hint { display: none; }
+  .demo-close { right: 16px; top: 16px; }
+  .demo-inner { padding: 72px 24px 100px; }
+  .demo-heading { font-size: 30px; }
+}

@@ -1,0 +1,107 @@
+/* ── Buttons ── */
+.run-btn {
+  display: inline-flex; align-items: center; gap: 10px;
+  margin-top: 32px;
+  background: var(--accent); color: #fff;
+  font-family: 'Space Grotesk', sans-serif; font-size: 15px; font-weight: 600;
+  letter-spacing: 0.3px; padding: 14px 28px;
+  border: none; border-radius: 2px; cursor: pointer;
+  transition: opacity 0.2s, transform 0.15s;
+  pointer-events: auto;
+}
+.run-btn:hover { opacity: 0.88; transform: translateY(-1px); }
+.run-btn .arrow { font-size: 18px; transition: transform 0.2s; }
+.run-btn:hover .arrow { transform: translateX(3px); }
+
+.demo-go {
+  margin-top: 32px; width: 100%; padding: 16px;
+  background: var(--accent); color: #fff;
+  font-family: 'Space Grotesk', sans-serif; font-size: 15px;
+  font-weight: 700; letter-spacing: 0.5px;
+  border: none; border-radius: 2px; cursor: pointer;
+  transition: opacity 0.2s;
+}
+.demo-go:hover { opacity: 0.88; }
+.demo-go:disabled { opacity: 0.45; cursor: not-allowed; }
+
+.studio-go {
+  margin-top: 28px; width: 100%; padding: 16px;
+  background: var(--accent); color: #fff;
+  font-family: 'Space Grotesk', sans-serif; font-size: 15px;
+  font-weight: 700; letter-spacing: 0.5px;
+  border: none; border-radius: 2px; cursor: pointer; transition: opacity 0.2s;
+}
+.studio-go:hover { opacity: 0.88; }
+.studio-go:disabled { opacity: 0.45; cursor: not-allowed; }
+
+/* ── Inputs ── */
+.demo-field {
+  width: 100%; padding: 15px 18px;
+  font-family: 'Space Grotesk', sans-serif; font-size: 17px;
+  background: transparent; color: var(--text);
+  border: none; border-bottom: 2px solid var(--text);
+  outline: none; transition: border-color 0.2s;
+}
+.demo-field:focus { border-bottom-color: var(--accent); }
+body.dark-mode .demo-field { border-bottom-color: rgba(255,255,255,0.4); }
+body.dark-mode .demo-field:focus { border-bottom-color: var(--accent); }
+
+/* ── Badges ── */
+.badge {
+  font-size: 10px; font-weight: 600; letter-spacing: 0.8px;
+  text-transform: uppercase; padding: 3px 8px; border-radius: 2px;
+}
+.badge-winner { background: rgba(196,93,62,0.12); color: var(--accent); }
+.badge-flag   { background: rgba(220,60,60,0.10); color: #c04040; }
+body.dark-mode .badge-flag { background: rgba(220,60,60,0.15); }
+
+.final-badge {
+  display: inline-block; padding: 3px 10px; border-radius: 20px;
+  background: var(--accent); color: #fff; font-size: 10px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px;
+}
+
+.ad-score-pill {
+  font-family: 'Space Grotesk', sans-serif; font-size: 11px; font-weight: 600;
+  padding: 3px 8px; border-radius: 10px; background: var(--light);
+  color: var(--text-secondary);
+}
+.ad-score-pill.good { background: rgba(95,168,50,0.1);  color: #5fa832; }
+.ad-score-pill.mid  { background: rgba(196,168,62,0.1); color: #c4a83e; }
+.ad-score-pill.low  { background: rgba(196,98,62,0.1);  color: #c4623e; }
+
+.emotion-tag {
+  font-size: 10px; font-weight: 600; text-transform: capitalize;
+  padding: 2px 7px; border-radius: 10px;
+  background: rgba(236,82,27,0.08); color: var(--accent);
+}
+
+.region-tag {
+  display: inline-block; font-size: 11px; font-weight: 600; letter-spacing: 1px;
+  text-transform: uppercase; padding: 4px 10px; border-radius: 2px;
+  margin-top: 16px; margin-right: 6px;
+}
+.tag-language   { background: rgba(100,180,255,0.12); color: #4a9fd4; }
+.tag-visual     { background: rgba(255,120,50,0.10);  color: #c4623e; }
+.tag-prefrontal { background: rgba(150,220,80,0.12);  color: #5fa832; }
+body.dark-mode .tag-language   { background: rgba(100,180,255,0.08); }
+body.dark-mode .tag-visual     { background: rgba(255,120,50,0.08); }
+body.dark-mode .tag-prefrontal { background: rgba(150,220,80,0.08); }
+
+.sponsor-chip {
+  display: inline-block; font-size: 10px; letter-spacing: 1px;
+  text-transform: uppercase; padding: 3px 8px; border-radius: 2px;
+  margin-top: 12px; margin-right: 4px;
+  border: 1px solid var(--border); color: var(--text-secondary);
+}
+
+/* ── Loading spinner ── */
+.loading-spin {
+  width: 40px; height: 40px; border-radius: 50%;
+  border: 2px solid rgba(196,93,62,0.2); border-top-color: var(--accent);
+  animation: spin 0.8s linear infinite;
+}
+.loading-label {
+  font-family: 'Space Grotesk', sans-serif; font-size: 12px;
+  letter-spacing: 3px; text-transform: uppercase; color: var(--text-secondary);
+}
