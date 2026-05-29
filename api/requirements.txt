@@ -1,25 +1,20 @@
+# Web framework
 fastapi>=0.111.0
-langgraph>=0.2.0
 uvicorn[standard]>=0.29.0
 pydantic>=2.7.0
-anthropic>=0.28.0
-tavily-python>=0.3.0
-overmind>=0.1.0
-mcp>=1.0.0
 python-dotenv>=1.0.0
 
-# Neural model dependencies
+# Agent graph
+langgraph>=0.2.0
+
+# Brand research (optional — skipped if TAVILY_API_KEY not set)
+tavily-python>=0.3.0
+
+# Tracing (optional — skipped if OVERMIND_API_KEY not set)
+overmind>=0.1.0
+
+# Emotion scoring — GoEmotions (RoBERTa) + CLIP
 torch>=2.2.0
+transformers>=4.40.0   # covers CLIPModel, CLIPProcessor, RoBERTa
 numpy>=1.26.0
-scikit-learn>=1.4.0
-sentence-transformers>=2.7.0
-transformers>=4.40.0
-Pillow>=10.0.0
-
-# Optional: ONNX quantized inference (125 MB INT8 model, ~5x faster on CPU)
-# pip install optimum[onnxruntime]>=1.18.0
-
-# TribeV2 reference (install from local path)
-# pip install -e "../Tribe V2 and Neural Predictions/tribe-v2-reference"
-nilearn>=0.10.0
-nibabel>=5.2.0
+Pillow>=10.0.0         # image decoding for CLIP scorer
