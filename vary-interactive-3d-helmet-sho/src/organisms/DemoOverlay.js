@@ -140,38 +140,13 @@ export function initDemoOverlay() {
     setTimeout(() => phaseBar.classList.remove('show'), 1200);
   }
 
-  function handleStreamEvent(evt) {
-    if (evt.type === 'status') {
-      demoStatus.textContent = evt.text;
-    } else if (evt.type === 'initial') {
-      fillTimelineSlot('slot-initial', evt.draft, evt.neural, evt.emotion, false);
-      const rs = (evt.neural || {}).region_scores || {};
-      window.setApiActivation?.(rs.language||0, rs.visual||0, rs.prefrontal||0);
-    } else if (evt.type === 'initial-visual') {
-      const v = document.getElementById('visual-initial');
-      if (v) v.innerHTML = `<img src="${evt.image_url}" style="width:100%;height:100%;object-fit:cover;display:block;" />`;
-    } else if (evt.type === 'refined') {
-      fillTimelineSlot('slot-refined', evt.draft, evt.neural, evt.emotion, true);
-      const rs = (evt.neural || {}).region_scores || {};
-      window.setApiActivation?.(rs.language||0, rs.visual||0, rs.prefrontal||0);
-      demoStatus.textContent = '';
-    } else if (evt.type === 'refined-visual') {
-      const v = document.getElementById('visual-refined');
-      if (v) v.innerHTML = `<img src="${evt.image_url}" style="width:100%;height:100%;object-fit:cover;display:block;" />`;
-    } else if (evt.type === 'done') {
-      stopPhaseAnimation(); demoStatus.textContent = '';
-    } else if (evt.type === 'error') {
-      demoStatus.textContent = 'Error: ' + evt.text; stopPhaseAnimation();
-    }
-  }
-
   analyseBtn.addEventListener('click', async () => {
     const brief = briefInput.value.trim();
     if (!brief) { briefInput.focus(); return; }
 
     analyseBtn.disabled = true;
     analyseBtn.textContent = 'Generating…';
-    demoStatus.textContent = '';
+    demoStatus.textContent = 'Running pipeline…';
     overlayRes.classList.remove('show');
     startPhaseAnimation();
     renderTimelineSkeleton(brandCtxBox, resultsInner);
@@ -182,13 +157,14 @@ export function initDemoOverlay() {
       const res = await fetch(ENDPOINTS.campaignStream, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ brief, target_emotion: selectedEmotion || null }),
+        body: JSON.stringify({ brief, mode: selectedEmotion ? 'text+image' : 'text' }),
       });
       if (!res.ok) throw new Error('API ' + res.status);
 
-      const reader = res.body.getReader();
+      const reader  = res.body.getReader();
       const decoder = new TextDecoder();
       let buf = '';
+
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
@@ -197,14 +173,53 @@ export function initDemoOverlay() {
         buf = lines.pop();
         for (const line of lines) {
           if (!line.startsWith('data: ')) continue;
-          try { handleStreamEvent(JSON.parse(line.slice(6))); } catch {}
+          let evt;
+          try { evt = JSON.parse(line.slice(6)); } catch { continue; }
+
+          if (evt.type === 'error') {
+            demoStatus.textContent = 'Error: ' + evt.message;
+            stopPhaseAnimation();
+            break;
+          }
+
+          if (evt.type === 'node') {
+            demoStatus.textContent = evt.label + '…';
+            const d = evt.data || {};
+
+            if (evt.node === 's2_parallel') {
+              // Initial copy + image arrive together
+              fillTimelineSlot('slot-initial', d.copy, null, null, false);
+              if (d.image?.image_url) {
+                const v = document.getElementById('visual-initial');
+                if (v) v.innerHTML = `<img src="${d.image.image_url}" style="width:100%;height:100%;object-fit:cover;display:block;" />`;
+              }
+            }
+
+            if (evt.node === 's3_eval' && d.eval) {
+              const ge = d.eval.text_goemotion_scores || {};
+              window.setApiActivation?.(ge.desire || 0, ge.excitement || 0, ge.nervousness || 0);
+            }
+
+            if (evt.node === 's4_parallel') {
+              // Refined copy + image arrive together
+              fillTimelineSlot('slot-refined', d.refined_copy, null, null, true);
+              if (d.refined_image?.image_url) {
+                const v = document.getElementById('visual-refined');
+                if (v) v.innerHTML = `<img src="${d.refined_image.image_url}" style="width:100%;height:100%;object-fit:cover;display:block;" />`;
+              }
+            }
+          }
+
+          if (evt.type === 'done') {
+            stopPhaseAnimation();
+            demoStatus.textContent = '';
+          }
         }
       }
-      stopPhaseAnimation();
     } catch (e) {
       stopPhaseAnimation();
       demoStatus.textContent = e.message.includes('fetch')
-        ? 'Cannot reach API — run start.bat first'
+        ? 'Cannot reach API — run dev.ps1 first'
         : 'Error: ' + e.message;
     }
 

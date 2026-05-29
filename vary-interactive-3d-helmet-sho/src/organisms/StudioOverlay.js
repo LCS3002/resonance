@@ -4,7 +4,6 @@ function escHtml(s) {
   return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
-function delay(ms) { return new Promise(r => setTimeout(r, ms)); }
 
 function setStepState(id, state) {
   const el = document.getElementById(id);
@@ -96,39 +95,81 @@ export function initStudioOverlay() {
     pipelineProgress.classList.add('show');
     ['ps0','ps1','psE','ps2','ps3'].forEach(id => setStepState(id, ''));
 
-    try {
-      setStepState('ps0', 'active'); pipelineStatus.textContent = 'S0 — Parsing brief…';
-      await delay(300);
-      setStepState('ps0', 'done'); setStepState('ps1', 'active');
-      pipelineStatus.textContent = 'S1 — Generating initial draft…';
+    // Map pipeline nodes → step indicator IDs
+    const NODE_TO_STEP = {
+      s0_parse:    'ps0',
+      s1_concept:  'ps1',
+      s2_parallel: 'ps1',  // copy+image = initial draft phase
+      s3_eval:     'psE',
+      s4_parallel: 'ps2',
+      s5_format:   'ps3',
+    };
+    let finalData = {};
 
-      const resp = await fetch(ENDPOINTS.agentCampaign, {
+    try {
+      setStepState('ps0', 'active');
+      pipelineStatus.textContent = 'Parsing brief…';
+
+      const resp = await fetch(ENDPOINTS.campaignStream, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ brief, mode: studioMode, run_eval: true }),
+        body: JSON.stringify({ brief, mode: studioMode }),
       });
       if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-      const data = await resp.json();
 
-      setStepState('ps1', 'done'); setStepState('psE', 'active');
-      pipelineStatus.textContent = 'Eval — Neural scoring + saliency…';
-      await delay(200);
+      const reader  = resp.body.getReader();
+      const decoder = new TextDecoder();
+      let buf = '';
 
-      setStepState('psE', 'done'); setStepState('ps2', 'active');
-      pipelineStatus.textContent = 'S2 — Refining with gradient feedback…';
-      await delay(200);
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buf += decoder.decode(value, { stream: true });
+        const lines = buf.split('\n');
+        buf = lines.pop();
+        for (const line of lines) {
+          if (!line.startsWith('data: ')) continue;
+          let evt;
+          try { evt = JSON.parse(line.slice(6)); } catch { continue; }
 
-      setStepState('ps2', 'done'); setStepState('ps3', 'active');
-      pipelineStatus.textContent = 'S3 — Formatting final ad…';
-      await delay(200);
+          if (evt.type === 'node') {
+            const stepId = NODE_TO_STEP[evt.node];
+            if (stepId) {
+              // Mark previous steps done, current active
+              const steps = ['ps0','ps1','psE','ps2','ps3'];
+              const idx = steps.indexOf(stepId);
+              steps.forEach((id, i) => {
+                if (i < idx)  setStepState(id, 'done');
+                if (i === idx) setStepState(id, 'active');
+              });
+            }
+            pipelineStatus.textContent = (evt.label || evt.node) + '…';
 
-      setStepState('ps3', 'done');
-      pipelineStatus.textContent = `Done · ${data.iteration_count || 2} iterations · target: ${data.target_emotion || 'auto'}`;
+            // Incrementally render as data arrives
+            const d = evt.data || {};
+            if (evt.node === 's2_parallel' && d.copy) {
+              renderAdCard(document.getElementById('initialDraftCard'), d.copy);
+            }
+            if (evt.node === 's3_eval' && d.eval) {
+              renderEval(d.eval);
+            }
+            if (evt.node === 's4_parallel' && d.refined_copy) {
+              renderAdCard(document.getElementById('finalDraftCard'), d.refined_copy);
+            }
+          }
 
-      renderAdCard(document.getElementById('initialDraftCard'), data.initial_draft);
-      renderEval(data.eval);
-      renderAdCard(document.getElementById('finalDraftCard'), data.final_draft);
-      studioResults.classList.add('show');
+          if (evt.type === 'done') {
+            finalData = evt.data || {};
+            ['ps0','ps1','psE','ps2','ps3'].forEach(id => setStepState(id, 'done'));
+            pipelineStatus.textContent = `Done · ${finalData.iteration || 1} iteration(s) · target: ${finalData.brief?.target_emotion || 'auto'}`;
+            studioResults.classList.add('show');
+          }
+
+          if (evt.type === 'error') {
+            throw new Error(evt.message);
+          }
+        }
+      }
 
     } catch(e) {
       pipelineStatus.textContent = `Error: ${e.message}`;
