@@ -1,0 +1,15 @@
+services:
+  frontend:
+    build:
+      context: ./vary-interactive-3d-helmet-sho
+      dockerfile: Dockerfile.dev
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./vary-interactive-3d-helmet-sho:/app
+      - frontend_modules:/app/node_modules   # preserves installed packages across bind mount
+    environment:
+      - NODE_ENV=development
+
+volumes:
+  frontend_modules:   # persists node_modules + .vite cache between restarts

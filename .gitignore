@@ -10,8 +10,11 @@ runs/
 node_modules/
 .DS_Store
 Thumbs.db
+.vite/
+vary-interactive-3d-helmet-sho/dist/
 *.egg-info/
 dist/
 build/
 .pytest_cache/
 .gstack/
+.claude/

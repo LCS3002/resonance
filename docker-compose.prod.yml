@@ -1,0 +1,10 @@
+services:
+  frontend:
+    build:
+      context: ./vary-interactive-3d-helmet-sho
+      dockerfile: Dockerfile.prod
+    ports:
+      - "3000:80"
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
