@@ -18,39 +18,46 @@ main.js
 ## DemoOverlay — pipeline UI
 
 **Trigger:** `#openDemo` click → `#demoOverlay` opens  
-**API:** `ENDPOINTS.campaign` → `POST /api/campaign`
+**API:** `ENDPOINTS.campaignStream` → `POST /api/campaign/stream` (SSE)
+
+Form: `#briefInput` (free text) + `#demoEmotionChips` → `selectedEmotion` (default `"infer"`)
 
 ```
 analyseBtn click
-  └─ fetch(ENDPOINTS.campaign, { brief, mode })
-       → data = JSON response
-       fillTimelineSlot('slot-initial', data.initial_copy, ...)
-       inject data.initial_image.image_url into #visual-initial
-       fillTimelineSlot('slot-refined',  data.final_copy, ...)
-       inject data.final_image.image_url  into #visual-refined
-       window.setApiActivation(ge.desire, ge.excitement, ge.nervousness)
+  └─ fetch(ENDPOINTS.campaignStream, { brief, mode: 'text', target_emotion: selectedEmotion })
+       SSE events:
+       s2_parallel → fillTimelineSlot('slot-initial', copy) + inject image_url
+       s3_eval     → window.setApiActivation(ge scores for brain mesh)
+       s4_parallel → fillTimelineSlot('slot-refined', refined_copy) + inject image_url
 ```
 
-Phase bar steps: `ph0` → `ph1` → `ph2` → `ph3` → `ph4`  
-Brain activation mapped from `data.eval.text_goemotion_scores`.
+Phase bar: `ph0` → `ph1` → `ph2` → `ph3` → `ph4` (time-based animation, not SSE-driven)  
+Emotion chips: `#demoEmotionChips` — 7 emotions + "Let AI choose" (infer)
 
 ---
 
 ## StudioOverlay — agent pipeline UI
 
 **Trigger:** `#openStudio` click → `#studioOverlay` opens  
-**API:** `ENDPOINTS.campaign` → `POST /api/campaign`
+**API:** `ENDPOINTS.campaignStream` → `POST /api/campaign/stream` (SSE)
+
+Form fields: `#studioCompany` + `#studioBriefLine` → combined into `brief` string  
+Platform chips: `#platform-chips` → `studioPlatform` → appended to brief  
+Emotion chips: `#studioEmotionChips` → `studioEmotion` → sent as `target_emotion`  
+Mode pills: `#mode-pill` → `studioMode` → sent as `mode`
 
 ```
 studioRunBtn click
-  └─ fetch(ENDPOINTS.campaign, { brief, mode })
-       → data = JSON response
-       renderAdCard(#initialDraftCard, data.initial_copy)
-       renderEval(data.eval)
-       renderAdCard(#finalDraftCard,   data.final_copy)
+  brief = "{studioCompany}. {studioBriefLine}. Platform: {studioPlatform}."
+  └─ fetch(ENDPOINTS.campaignStream, { brief, mode, target_emotion })
+       SSE: s0_parse → [s0b_infer if infer] → s1_concept → s2_parallel → s3_eval → s4_parallel → s5_format
+       s0b_infer event → show #emotionRationaleSection with chosen emotion + rationale
+       s2_parallel event → renderAdCard(#initialDraftCard, copy)
+       s3_eval event → renderEval(eval)
+       s4_parallel event → renderAdCard(#finalDraftCard, refined_copy)
 ```
 
-Pipeline step indicators: `ps0` → `ps1` → `psE` → `ps2` → `ps3`
+Pipeline step indicators: `ps0` → `ps0b` (shown only when emotion=infer) → `ps1` → `psE` → `ps2` → `ps3`
 
 ---
 
@@ -78,9 +85,12 @@ Node sequence: `s0_parse → s1_concept → s2_parallel → s3_eval → s4_paral
 | Thing to change | Where |
 |---|---|
 | Add / rename a backend URL | `config/api.js:ENDPOINTS` |
+| Demo emotion chip list | `index.html #demoEmotionChips` + `DemoOverlay.js` default |
+| Studio emotion chip list | `index.html #studioEmotionChips` + `StudioOverlay.js` default |
+| Studio platform chips | `index.html .platform-chips` |
 | DemoOverlay request body | `DemoOverlay.js:analyseBtn` click handler |
 | DemoOverlay response rendering | `DemoOverlay.js:fillTimelineSlot()` calls |
-| StudioOverlay request body | `StudioOverlay.js:studioRunBtn` click handler |
-| StudioOverlay response rendering | `StudioOverlay.js:renderAdCard()` / `renderEval()` calls |
+| StudioOverlay form → brief construction | `StudioOverlay.js:studioRunBtn` (brief = company + description + platform) |
+| StudioOverlay response rendering | `StudioOverlay.js:renderAdCard()` / `renderEval()` |
 | Brain mesh activation mapping | `DemoOverlay.js` — `window.setApiActivation` args |
 | Phase bar timing | `DemoOverlay.js:startPhaseAnimation()` |

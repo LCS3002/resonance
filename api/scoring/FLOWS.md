@@ -70,6 +70,20 @@ image_gap = 1 - image_target_score
 
 ---
 
+## Emotion taxonomy (7 profiles)
+
+| Profile | GoEmotions proxies | CLIP prompt theme |
+|---|---|---|
+| fomo | desire + nervousness | scarcity, closing window |
+| curiosity | curiosity + surprise | intrigue, mystery |
+| fear | nervousness + surprise | unease, dread |
+| excitement | excitement + desire | energy, anticipation |
+| trust | realization + curiosity | calm, dependability |
+| pride | desire + realization | ownership, achievement |
+| delight | excitement + surprise | joy, unexpected warmth |
+
+Model storage: both scorers read `MODEL_DIR` env var (default `./models`) and pass it as `cache_dir` to HuggingFace `from_pretrained()`. Run `python -m api.scripts.download_models` to pre-populate.
+
 ## Change Index
 
 | Thing to change | Where |
@@ -78,5 +92,6 @@ image_gap = 1 - image_target_score
 | Profile → GoEmotions mapping | `goemotion_scorer.py:PROFILE_TO_GOEMOTION` |
 | CLIP emotion text prompts | `clip_scorer.py:_EMOTION_PROMPTS` |
 | CLIP model checkpoint | `clip_scorer.py:CLIPScorer._load()` |
+| Local model directory | `MODEL_DIR` env var |
 | Number of saliency tokens shown | `saliency.py:build_feedback_hint` (top/bottom N) |
 | Feedback weighting formula | `emotion.py:build_combined_feedback` |

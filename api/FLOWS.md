@@ -19,26 +19,52 @@ Files: `main.py`, `agent.py`, `agent_langgraph.py`, `agent_tools.py`, `claude_lo
 ## GAN-loop pipeline — `POST /api/campaign`
 
 ```
-CampaignRequest { brief, mode }
-  └─ run_agent(raw_brief, mode)                 agent_langgraph.py:run_agent()
+CampaignRequest { brief, mode, target_emotion }
+  └─ run_agent(raw_brief, mode, target_emotion)   agent_langgraph.py:run_agent()
 
-S0 s0_parse   (Haiku)    raw_brief → BriefState
-S1 s1_concept (Sonnet)   BriefState → ConceptState  ← invariant anchor
-S2 s2_parallel           two threads:
+S0  s0_parse    (Haiku)   raw_brief → BriefState
+                           if target_emotion override provided: inject into brief
+                           conditional: target_emotion=="infer" → S0b, else → S1
+
+S0b s0b_infer   (Sonnet)  [only if target_emotion=="infer"]
+                           brand + audience → infer best of 7 emotions (CoT)
+                           → brief.target_emotion, emotion_rationale
+
+S1  s1_concept  (Sonnet)  BriefState → ConceptState  ← invariant anchor
+S2  s2_parallel            two threads:
   ├─ S2a s2a_copy  (Sonnet)  → CopyDraft { headline, body, cta }
   └─ S2b s2b_image (Haiku)   → ImageDraft { image_prompt, image_url }
-         if mode=text+image: image_gen()         agent_tools.py:image_gen()
-S3 s3_eval               GoEmotions on copy + CLIP on image + gradients
-                          → EvalResult + combined_feedback
-                          detail: scoring/FLOWS.md
-S4 s4_parallel           two threads:
+         if mode=text+image: image_gen()           agent_tools.py:image_gen()
+S3  s3_eval                GoEmotions on copy + CLIP on image + gradients
+                            → EvalResult + combined_feedback
+                            detail: scoring/FLOWS.md
+S4  s4_parallel            two threads:
   ├─ S4a s4a_refine_copy  (Sonnet) concept-anchored copy revision
   └─ S4b s4b_refine_image (Haiku)  concept-anchored image revision
-S5 s5_format  (Haiku)    platform constraint check → FinalAd
+S5  s5_format   (Haiku)   platform constraint check → FinalAd
 ```
 
 Graph wiring: `agent_langgraph.py:_build_graph()`  
 Concept is the shared invariant — S4a/S4b cannot change it.
+
+## Emotion taxonomy
+
+7 ad-emotion profiles (replaces aspirational|trustworthy|urgent|playful|premium):
+
+| Emotion | Lever | GoEmotions proxies |
+|---|---|---|
+| fomo | scarcity, "others are in" | desire + nervousness |
+| curiosity | intrigue, open loop | curiosity + surprise |
+| fear | risk of loss, danger | nervousness + surprise |
+| excitement | energy, anticipation | excitement + desire |
+| trust | credibility, proof | realization + curiosity |
+| pride | ownership, "I chose well" | desire + realization |
+| delight | joy, surprise | excitement + surprise |
+
+`target_emotion` flow:
+- specific value → injected in S0 after parse
+- `"infer"` → S0b CoT inference (Sonnet)
+- `""` → S0 extracts from raw brief text (fallback)
 
 ---
 
@@ -125,17 +151,58 @@ image_gen_async(image_prompt, target_emotion)  [async — used in FastAPI handle
 
 ---
 
+## Prompt storage — `prompts/`
+
+Each pipeline stage has a versioned prompt file. The loader always picks the highest `vN` for each stage.
+
+```
+prompts/
+  loader.py              load_prompt(stage) → (system, user_template)
+                         render(stage, **kwargs) → (system, user_content)
+  s0_parse/v1.txt        few-shot: brief → BriefState JSON
+  s1_concept/v1.txt      few-shot: brief → ConceptState JSON  ← most critical
+  s2a_copy/v1.txt        few-shot: concept → CopyDraft JSON
+  s2b_image/v1.txt       few-shot: concept → image_prompt JSON
+  s4a_refine_copy/v1.txt few-shot: copy + feedback → revised CopyDraft
+  s4b_refine_image/v1.txt few-shot: image_prompt + feedback → revised image_prompt
+  s5_format/v1.txt       few-shot: violations → trimmed CopyDraft
+```
+
+File format (each `vN.txt`):
+```
+## SYSTEM
+<system prompt>
+
+## USER
+<user template — $variable placeholders, string.Template style>
+```
+
+To add a new prompt version: create `vN+1.txt` in the stage directory. Loader picks it up automatically on next restart — no code change needed.
+
+Variables per stage:
+| Stage | Template variables |
+|---|---|
+| s0_parse | `$raw_brief` |
+| s1_concept | `$raw_brief`, `$brand_name`, `$target_emotion` |
+| s2a_copy | `$emotional_core`, `$tone`, `$brand_name`, `$platform`, `$target_emotion` |
+| s2b_image | `$emotional_core`, `$visual_metaphor`, `$target_emotion` |
+| s4a_refine_copy | `$emotional_core`, `$tone`, `$brand_name`, `$platform`, `$prev_headline`, `$prev_body`, `$prev_cta`, `$feedback` |
+| s4b_refine_image | `$emotional_core`, `$visual_metaphor`, `$target_emotion`, `$prev_image_prompt`, `$feedback` |
+| s5_format | `$constraint_str`, `$headline`, `$body`, `$cta` |
+
+---
+
 ## Change Index
 
 | Thing to change | Where |
 |---|---|
 | Route definitions | `main.py` routes section |
 | Agent graph topology | `agent_langgraph.py:_build_graph()` |
-| S0 parse prompt | `agent_langgraph.py:s0_parse()` |
-| S1 concept prompt | `agent_langgraph.py:s1_concept()` |
-| S2a/S4a copy prompts | `agent_langgraph.py:s2a_copy()` / `s4a_refine_copy()` |
-| S2b/S4b image prompts | `agent_langgraph.py:s2b_image()` / `s4b_refine_image()` |
+| Any stage prompt | `prompts/<stage>/v1.txt` — or add `v2.txt` for a new version |
+| Emotion taxonomy | `scoring/goemotion_scorer.py:PROFILE_TO_GOEMOTION` + `scoring/clip_scorer.py:_EMOTION_PROMPTS` |
+| Emotion inference prompt | `prompts/s0b_infer/v1.txt` |
 | Platform char limits | `agent_tools.py:PLATFORM_CONSTRAINTS` |
 | SVG colour palettes | `agent_tools.py:_EMOTION_PALETTES` |
 | Claude CLI timeout | `claude_local.py:_TIMEOUT` |
-| Singleton model init | `agent.py:get_goemotion()` / `get_clip()` |
+| Local model directory | `MODEL_DIR` env var (default `./models`) |
+| Pre-download models | `python -m api.scripts.download_models` |
