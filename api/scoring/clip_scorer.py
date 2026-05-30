@@ -1,15 +1,16 @@
 """CLIP-based image emotion scorer.
 
 Uses openai/clip-vit-base-patch32 from HuggingFace.
-No API key required. Runs on CPU (~600 MB). Fully differentiable.
+No API key required. Runs on CPU (~600 MB).
 
-Emotion scoring: cosine similarity between image embedding and
-emotion-primed text embeddings ("a photo that evokes {emotion}").
+Set MODEL_DIR env var to load from a local folder instead of downloading:
+    MODEL_DIR=./models  (default)
 """
 
 from __future__ import annotations
 
 import logging
+import os
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -18,13 +19,17 @@ if TYPE_CHECKING:
 
 logger = logging.getLogger(__name__)
 
-# Emotion prompts — phrased to activate CLIP's image-text alignment
+MODEL_DIR = os.getenv("MODEL_DIR", "./models")
+
+# ── Emotion prompts — phrased to activate CLIP's image-text alignment ──────────
 _EMOTION_PROMPTS: dict[str, str] = {
-    "aspirational": "a photo that evokes ambition, hope, and reaching for something greater",
-    "trustworthy":  "a photo that evokes calm, reliability, and quiet confidence",
-    "urgent":       "a photo that evokes immediate action, tension, and urgency",
-    "playful":      "a photo that evokes fun, energy, and joyful excitement",
-    "premium":      "a photo that evokes luxury, exclusivity, and refined elegance",
+    "fomo":       "a photo that evokes scarcity, missing out, and the urgency of a closing window of opportunity",
+    "curiosity":  "a photo that evokes intrigue, mystery, and the irresistible pull of wanting to know more",
+    "fear":       "a photo that evokes unease, quiet dread, and the risk of something going wrong",
+    "excitement": "a photo that evokes energy, anticipation, and the electric thrill of something about to happen",
+    "trust":      "a photo that evokes calm, reliability, and the steady confidence of something dependable",
+    "pride":      "a photo that evokes ownership, achievement, and the quiet satisfaction of having chosen well",
+    "delight":    "a photo that evokes joyful surprise and the warm happiness of an unexpected good moment",
 }
 
 EMOTIONS = list(_EMOTION_PROMPTS.keys())
@@ -45,12 +50,15 @@ class CLIPScorer:
             import torch
             from transformers import CLIPModel, CLIPProcessor
 
-            self._processor = CLIPProcessor.from_pretrained("openai/clip-vit-base-patch32")
-            self._model = CLIPModel.from_pretrained("openai/clip-vit-base-patch32")
+            self._processor = CLIPProcessor.from_pretrained(
+                "openai/clip-vit-base-patch32", cache_dir=MODEL_DIR
+            )
+            self._model = CLIPModel.from_pretrained(
+                "openai/clip-vit-base-patch32", cache_dir=MODEL_DIR
+            )
             self._model.eval()
 
-            # Pre-compute text features for all emotion prompts (done once)
-            import torch
+            # Pre-compute text features for all emotion prompts (done once at load)
             with torch.no_grad():
                 for emotion, prompt in _EMOTION_PROMPTS.items():
                     inputs = self._processor(text=[prompt], return_tensors="pt", padding=True)
@@ -59,20 +67,16 @@ class CLIPScorer:
                     self._text_features[emotion] = feat
 
             self._available = True
-            logger.info("CLIPScorer loaded — clip-vit-base-patch32")
+            logger.info("CLIPScorer loaded from %s", MODEL_DIR)
         except Exception as e:
-            logger.warning(f"CLIPScorer unavailable: {e}")
+            logger.warning("CLIPScorer unavailable: %s", e)
             self._available = False
 
     def is_available(self) -> bool:
         return self._available
 
     def score_image(self, image: "PILImage.Image") -> dict[str, float]:
-        """Return cosine similarity scores for each emotion given a PIL Image.
-
-        Returns dict[emotion_name → float 0-1].
-        Falls back to equal weights if model unavailable.
-        """
+        """Return cosine similarity scores [0,1] for each emotion given a PIL Image."""
         if not self._available:
             return {e: 0.2 for e in EMOTIONS}
 
@@ -85,7 +89,7 @@ class CLIPScorer:
         scores = {}
         for emotion, text_feat in self._text_features.items():
             sim = float((img_feat * text_feat).sum())
-            # CLIP cosine sims sit in ~[-0.3, 0.4]; normalise to [0, 1]
+            # CLIP cosine sims sit in ~[-0.3, 0.4] — normalise to [0, 1]
             scores[emotion] = float(max(0.0, min(1.0, (sim + 0.3) / 0.7)))
 
         return scores
@@ -99,7 +103,6 @@ class CLIPScorer:
             import base64, io, urllib.request
 
             if image_url.startswith("data:image"):
-                # data URI — strip header and decode base64
                 _, b64 = image_url.split(",", 1)
                 img = Image.open(io.BytesIO(base64.b64decode(b64))).convert("RGB")
             else:
@@ -108,10 +111,10 @@ class CLIPScorer:
 
             return self.score_image(img)
         except Exception as e:
-            logger.warning(f"CLIPScorer.score_image_url failed: {e}")
+            logger.warning("CLIPScorer.score_image_url failed: %s", e)
             return {e: 0.2 for e in EMOTIONS}
 
     def top_emotion(self, scores: dict[str, float]) -> tuple[str, float]:
-        """Return (emotion_name, score) for the highest scoring emotion."""
+        """Return (emotion_name, score) for the highest-scoring emotion."""
         best = max(scores.items(), key=lambda x: x[1])
         return best[0], best[1]

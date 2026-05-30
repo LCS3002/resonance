@@ -1,32 +1,42 @@
 """RoBERTa GoEmotions classifier for ad copy emotion scoring.
 
 Model: SamLowe/roberta-base-go_emotions
-Output: 28-class sigmoid vector. We expose only the 6 target labels defined in the spec.
-Uses PyTorch (not ONNX) so gradients are available for saliency.
+Output: 28-class sigmoid vector. We expose only the 6 raw labels needed to
+        proxy our 7 ad-emotion profiles (fomo, curiosity, fear, excitement,
+        trust, pride, delight).
+
+Set MODEL_DIR env var to load from a local folder instead of downloading:
+    MODEL_DIR=./models  (default)
 """
 
 import logging
+import os
 
 import torch
 
 logger = logging.getLogger(__name__)
 
+MODEL_DIR = os.getenv("MODEL_DIR", "./models")
+
+# ── Raw GoEmotions label indices (28-class model) ──────────────────────────────
 TARGET_LABELS: dict[str, int] = {
     "curiosity":   7,
-    "desire":      8,   # FOMO proxy
-    "excitement":  13,  # arousal proxy
-    "nervousness": 19,  # concern proxy
-    "surprise":    26,
-    "realization": 22,  # pattern-interrupt
+    "desire":      8,   # proxy: fomo + pride
+    "excitement":  13,  # proxy: excitement + delight
+    "nervousness": 19,  # proxy: fomo + fear
+    "surprise":    26,  # proxy: delight + curiosity
+    "realization": 22,  # proxy: trust + pride
 }
 
-# Maps our 5 EMOTION_PROFILES to the two GoEmotions labels that best proxy them.
+# ── 7 ad-emotion profiles → two GoEmotions proxies each ───────────────────────
 PROFILE_TO_GOEMOTION: dict[str, list[str]] = {
-    "aspirational": ["excitement", "desire"],
-    "trustworthy":  ["realization", "curiosity"],
-    "urgent":       ["nervousness", "surprise"],
-    "playful":      ["curiosity", "excitement"],
-    "premium":      ["desire", "realization"],
+    "fomo":       ["desire", "nervousness"],    # want it + anxiety of missing
+    "curiosity":  ["curiosity", "surprise"],    # intrigue + open loop
+    "fear":       ["nervousness", "surprise"],  # dread + alarm
+    "excitement": ["excitement", "desire"],     # energy + wanting
+    "trust":      ["realization", "curiosity"], # recognition + intellectual engagement
+    "pride":      ["desire", "realization"],    # ownership + recognition of quality
+    "delight":    ["excitement", "surprise"],   # joy + unexpected
 }
 
 
@@ -39,21 +49,25 @@ class GoEmotionScorer:
         self._tokenizer = None
         try:
             from transformers import AutoModelForSequenceClassification, AutoTokenizer
-            self._tokenizer = AutoTokenizer.from_pretrained(self.MODEL_ID)
-            self._model = AutoModelForSequenceClassification.from_pretrained(self.MODEL_ID)
+            self._tokenizer = AutoTokenizer.from_pretrained(
+                self.MODEL_ID, cache_dir=MODEL_DIR
+            )
+            self._model = AutoModelForSequenceClassification.from_pretrained(
+                self.MODEL_ID, cache_dir=MODEL_DIR
+            )
             self._model.eval()
             self._available = True
-            logger.info("GoEmotionScorer loaded — RoBERTa GoEmotions ready")
+            logger.info("GoEmotionScorer loaded from %s", MODEL_DIR)
         except Exception as exc:
-            logger.warning(f"GoEmotionScorer unavailable: {exc}")
+            logger.warning("GoEmotionScorer unavailable: %s", exc)
 
     def is_available(self) -> bool:
         return self._available
 
     def classify(self, text: str) -> dict[str, float]:
-        """Return sigmoid scores for the 6 target emotion labels.
+        """Return sigmoid scores for the 6 raw GoEmotions target labels.
 
-        Falls back to 0.5 placeholders when model is unavailable.
+        Falls back to 0.5 placeholders when the model is unavailable.
         """
         if not self._available:
             return {k: 0.5 for k in TARGET_LABELS}
@@ -70,14 +84,14 @@ class GoEmotionScorer:
         return self._model, self._tokenizer
 
     def profile_score(self, goemotion_scores: dict[str, float]) -> dict[str, float]:
-        """Aggregate 6 GoEmotions scores into 5 emotion-profile scores (mean of two proxies)."""
+        """Aggregate raw GoEmotions scores into the 7 ad-emotion profile scores."""
         result: dict[str, float] = {}
         for profile, labels in PROFILE_TO_GOEMOTION.items():
             result[profile] = sum(goemotion_scores.get(l, 0.5) for l in labels) / len(labels)
         return result
 
     def predict(self, text: str) -> tuple[str, float]:
-        """Return (best_profile, confidence) based on GoEmotions classification."""
+        """Return (best_profile, confidence) across the 7 ad-emotion profiles."""
         scores = self.classify(text)
         profile_scores = self.profile_score(scores)
         best = max(profile_scores, key=profile_scores.__getitem__)
