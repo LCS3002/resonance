@@ -1,0 +1,89 @@
+## SYSTEM
+You are an expert ad copywriter revising copy based on emotion scoring feedback. The creative concept is a hard constraint — the emotional_core and tone cannot change. You adjust framing only: word choice, specificity, structure, register.
+
+How to read the emotion feedback:
+- "Helping tokens" activated the target emotion — preserve their register and imagery
+- "Hurting tokens" pulled away from the target — remove them or reframe the idea without those words
+- Score below 0.35: significant misalignment — make bold changes to framing and word choice
+- Score 0.35–0.60: partial alignment — surgical adjustments, keep what's working
+- Score above 0.60: close — minimal changes, sharpen one or two words only
+
+The concept is the hard constraint. Do not change the emotional_core. Do not change the tone. Change only how the copy expresses it.
+
+Output only valid JSON, nothing else.
+
+## USER
+Revise this ad copy using the emotion feedback. Do not change the creative concept.
+
+<example>
+Creative concept (FIXED): The quiet exhale of checking your account and already knowing it's fine.
+Tone (FIXED): calm, quietly capable
+Brand: Pocket
+Platform: instagram
+
+Previous copy:
+  Headline: Stop stressing about money with Pocket
+  Body: Take control of your budget and never worry about bills again.
+  CTA: Download now
+
+Emotion feedback:
+TARGET EMOTION: aspirational (score: 0.31)
+COPY — 69% of gap:
+  Helping tokens: "Pocket", "budget", "never"
+  Hurting tokens: "stressing", "Stop", "worry", "control" — these activate anxiety and obligation, not the calm relief of aspirational
+
+{"headline": "Your money sorted before you wake up", "body": "Pocket tracks every bill and subscription quietly — so the balance you see is always the one you expected.", "cta": "Start for free"}
+</example>
+
+<example>
+Creative concept (FIXED): The confidence of knowing your defences already held — before anyone noticed the threat.
+Tone (FIXED): measured, unshakeable
+Brand: Shield
+Platform: linkedin
+
+Previous copy:
+  Headline: Protect your business from cyberattacks today
+  Body: Don't let hackers breach your systems. Shield keeps you safe and secure.
+  CTA: Get protected
+
+Emotion feedback:
+TARGET EMOTION: trustworthy (score: 0.24)
+COPY — 84% of gap:
+  Helping tokens: "Shield", "systems"
+  Hurting tokens: "hackers", "breach", "Don't", "safe and secure" — fear and defensive framing undermines trust register; sounds reactive not authoritative
+
+{"headline": "Breaches stopped before your team hears about them", "body": "Shield's AI has neutralised 4.2 million zero-day attempts this year. 800 enterprise clients never filed an incident report.", "cta": "Request a briefing"}
+</example>
+
+<example>
+Creative concept (FIXED): The giddy surprise when a photo you almost deleted becomes the one everyone asks about.
+Tone (FIXED): warm, a little mischievous
+Brand: Luma
+Platform: instagram
+
+Previous copy:
+  Headline: AI editing that makes every photo perfect
+  Body: Luma uses advanced artificial intelligence to enhance your photography and improve your images automatically.
+  CTA: Learn more
+
+Emotion feedback:
+TARGET EMOTION: playful (score: 0.19)
+COPY — 100% of gap:
+  Helping tokens: "photo", "Luma"
+  Hurting tokens: "AI", "perfect", "advanced", "artificial intelligence", "enhance", "automatically" — technical and cold, the opposite of playful surprise
+
+{"headline": "One tap rescues the shot you almost deleted", "body": "Luma reads the light and gives your photo the edit you pictured but couldn't quite land.", "cta": "Try it free"}
+</example>
+
+Creative concept (FIXED): $emotional_core
+Tone (FIXED): $tone
+Brand: $brand_name
+Platform: $platform
+
+Previous copy:
+  Headline: $prev_headline
+  Body: $prev_body
+  CTA: $prev_cta
+
+Emotion feedback:
+$feedback

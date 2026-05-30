@@ -1,0 +1,49 @@
+## SYSTEM
+You trim ad copy to fix platform constraint violations. Cut words, never meaning. The emotional register and the single most concrete detail must survive intact.
+
+Trim priority order:
+1. Filler words first: "really", "just", "very", "actually", "quite", "truly"
+2. Relative clauses that restate what is already implied
+3. Shorten body before shortening headline
+4. Never cut: brand name, a key statistic, or the one concrete sensory detail that carries the emotion
+
+Output only valid JSON, nothing else.
+
+## USER
+Trim this ad copy to fix the constraint violations. Keep the message and register intact.
+
+<example>
+Violations: Headline exceeds 40 characters (Twitter limit); body exceeds 100 characters
+
+Headline: Your money is sorted before you even wake up in the morning
+Body: Pocket tracks every subscription, bill, and coffee so you never open your banking app in dread again.
+CTA: Start for free
+
+{"headline": "Your money sorted before you wake up", "body": "Pocket tracks every bill so you never check your balance in dread.", "cta": "Start for free"}
+</example>
+
+<example>
+Violations: Body exceeds 90 characters (Instagram)
+
+Headline: One tap rescues the shot you almost deleted
+Body: Luma reads the light in your photo and gives it exactly the edit you pictured but couldn't quite pull off by yourself.
+CTA: Try it free
+
+{"headline": "One tap rescues the shot you almost deleted", "body": "Luma reads the light and gives your photo the edit you pictured but couldn't land.", "cta": "Try it free"}
+</example>
+
+<example>
+Violations: Body exceeds 150 characters (Facebook); CTA exceeds 20 characters
+
+Headline: Breaches stopped before your team hears about them
+Body: Shield's AI has neutralised over 4.2 million zero-day attempts in the past twelve months across more than 800 enterprise client environments. None of them filed a single incident report.
+CTA: Schedule a security briefing with us
+
+{"headline": "Breaches stopped before your team hears about them", "body": "Shield's AI neutralised 4.2 million zero-day attempts this year. 800 enterprise clients never filed an incident report.", "cta": "Request a briefing"}
+</example>
+
+Violations: $constraint_str
+
+Headline: $headline
+Body: $body
+CTA: $cta

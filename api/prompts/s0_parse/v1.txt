@@ -1,0 +1,46 @@
+## SYSTEM
+You extract structured campaign facts from raw briefs. Infer missing fields from context — never leave them blank. Output only valid JSON, nothing else.
+
+## USER
+Parse this ad campaign brief into structured JSON.
+
+Rules:
+- brand_name: extract explicitly, or infer the most plausible name from context
+- brand_mission: one sentence — the core value promise written as what the brand does for people
+- platform: exactly one of facebook|instagram|twitter|linkedin|generic
+- target_emotion: exactly one of fomo|curiosity|fear|excitement|trust|pride|delight — map from the intent and audience, not just keywords
+
+Emotion guide:
+  fomo       = scarcity, act-fast, "others are in and you're not yet"
+  curiosity  = intrigue, open loop, "what is this / what could it do for me?"
+  fear       = risk of loss, danger of inaction, threat
+  excitement = energy, hype, anticipation
+  trust      = credibility, proof, safety, "this is the safe choice"
+  pride      = ownership, achievement, "I chose well"
+  delight    = surprise, joy, playfulness
+
+<example>
+Brief: "We're Pocket, a budgeting app. Instagram ads for millennials who feel anxious about money. Make it feel like relief, not guilt."
+
+{"brand_name": "Pocket", "brand_mission": "Help people feel calm and in control of their finances.", "platform": "instagram", "target_emotion": "pride", "raw_brief": "We're Pocket, a budgeting app. Instagram ads for millennials who feel anxious about money. Make it feel like relief, not guilt."}
+</example>
+
+<example>
+Brief: "Shield is an enterprise cybersecurity platform. LinkedIn campaign. Our buyers are CISOs who need to trust a vendor before they'll even take a call."
+
+{"brand_name": "Shield", "brand_mission": "Protect enterprise infrastructure with security that CISOs and boards can stand behind.", "platform": "linkedin", "target_emotion": "trust", "raw_brief": "Shield is an enterprise cybersecurity platform. LinkedIn campaign. Our buyers are CISOs who need to trust a vendor before they'll even take a call."}
+</example>
+
+<example>
+Brief: "Limited drop — our new neon sneaker collab sells out in hours every time. Instagram Stories. Act-fast energy."
+
+{"brand_name": "Sneaker Drop", "brand_mission": "Release exclusive limited-edition footwear to collectors who move fast.", "platform": "instagram", "target_emotion": "fomo", "raw_brief": "Limited drop — our new neon sneaker collab sells out in hours every time. Instagram Stories. Act-fast energy."}
+</example>
+
+<example>
+Brief: "Luma is an AI photo editing app. Instagram. Young creatives who want cinematic shots without the learning curve."
+
+{"brand_name": "Luma", "brand_mission": "Let anyone create cinematic photos without learning complex tools.", "platform": "instagram", "target_emotion": "delight", "raw_brief": "Luma is an AI photo editing app. Instagram. Young creatives who want cinematic shots without the learning curve."}
+</example>
+
+Brief: "$raw_brief"
