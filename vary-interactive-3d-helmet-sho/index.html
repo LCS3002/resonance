@@ -180,18 +180,20 @@
       <div class="demo-heading">What are you<br>advertising?</div>
       <input type="text" class="demo-field" id="briefInput" placeholder="e.g. luxury EV for London families…" autocomplete="off" />
       <div class="demo-row-label">Target emotion</div>
-      <div class="emotion-chips">
-        <button class="emotion-chip active" data-emotion="">Any</button>
-        <button class="emotion-chip" data-emotion="aspirational">Aspirational</button>
-        <button class="emotion-chip" data-emotion="trustworthy">Trustworthy</button>
-        <button class="emotion-chip" data-emotion="urgent">Urgent</button>
-        <button class="emotion-chip" data-emotion="playful">Playful</button>
-        <button class="emotion-chip" data-emotion="premium">Premium</button>
+      <div class="emotion-chips" id="demoEmotionChips">
+        <button class="emotion-chip active" data-emotion="infer">Let AI choose</button>
+        <button class="emotion-chip" data-emotion="fomo">FOMO</button>
+        <button class="emotion-chip" data-emotion="curiosity">Curiosity</button>
+        <button class="emotion-chip" data-emotion="fear">Fear</button>
+        <button class="emotion-chip" data-emotion="excitement">Excitement</button>
+        <button class="emotion-chip" data-emotion="trust">Trust</button>
+        <button class="emotion-chip" data-emotion="pride">Pride</button>
+        <button class="emotion-chip" data-emotion="delight">Delight</button>
       </div>
       <div class="demo-row-label">Quick start</div>
       <div class="demo-suggests">
-        <button class="demo-suggest" data-brief="luxury electric SUV for London families">Tesla EV · London families</button>
-        <button class="demo-suggest" data-brief="sustainable running trainers for Gen Z athletes">Nike · Gen Z athletes</button>
+        <button class="demo-suggest" data-brief="luxury electric SUV for London families">EV · London families</button>
+        <button class="demo-suggest" data-brief="sustainable running trainers for Gen Z athletes">Trainers · Gen Z</button>
         <button class="demo-suggest" data-brief="Spotify Premium for busy professionals who commute">Spotify · commuters</button>
         <button class="demo-suggest" data-brief="premium noise-cancelling headphones for open-plan offices">Sony WH · office</button>
       </div>
@@ -216,25 +218,50 @@
     <button class="demo-close" id="closeStudio" aria-label="Close">×</button>
     <div class="studio-inner">
       <div class="studio-heading">Agent Studio</div>
-      <div class="studio-sub">S0→S1→Eval→S2→S3 · RoBERTa emotion scoring + gradient saliency + Claude refinement</div>
-      <input type="text" class="demo-field" id="studioBrief" placeholder="e.g. sustainable sneakers for Gen Z runners…" autocomplete="off" />
-      <div class="demo-row-label">Mode</div>
-      <div class="studio-mode-row">
-        <button class="mode-pill active" data-mode="text">Text only</button>
-        <button class="mode-pill" data-mode="text+image">Text + SVG mockup</button>
+      <div class="studio-sub">S0→S1→Eval→Refine · RoBERTa + CLIP scoring · gradient saliency · Claude refinement</div>
+
+      <div class="studio-form">
+        <div class="studio-field-row">
+          <div class="studio-field-group">
+            <div class="demo-row-label">Company</div>
+            <input type="text" class="demo-field studio-field-half" id="studioCompany" placeholder="e.g. Pocket" autocomplete="off" />
+          </div>
+          <div class="studio-field-group">
+            <div class="demo-row-label">Platform</div>
+            <div class="platform-chips">
+              <button class="platform-chip active" data-platform="instagram">Instagram</button>
+              <button class="platform-chip" data-platform="facebook">Facebook</button>
+              <button class="platform-chip" data-platform="twitter">Twitter</button>
+              <button class="platform-chip" data-platform="linkedin">LinkedIn</button>
+            </div>
+          </div>
+        </div>
+        <div class="demo-row-label">What you do</div>
+        <input type="text" class="demo-field" id="studioBriefLine" placeholder="e.g. budgeting app for millennials anxious about money" autocomplete="off" />
+        <div class="demo-row-label">Target emotion</div>
+        <div class="emotion-chips" id="studioEmotionChips">
+          <button class="emotion-chip active" data-emotion="infer">Let AI choose</button>
+          <button class="emotion-chip" data-emotion="fomo">FOMO</button>
+          <button class="emotion-chip" data-emotion="curiosity">Curiosity</button>
+          <button class="emotion-chip" data-emotion="fear">Fear</button>
+          <button class="emotion-chip" data-emotion="excitement">Excitement</button>
+          <button class="emotion-chip" data-emotion="trust">Trust</button>
+          <button class="emotion-chip" data-emotion="pride">Pride</button>
+          <button class="emotion-chip" data-emotion="delight">Delight</button>
+        </div>
+        <div class="demo-row-label">Output mode</div>
+        <div class="studio-mode-row">
+          <button class="mode-pill active" data-mode="text">Text only</button>
+          <button class="mode-pill" data-mode="text+image">Text + SVG mockup</button>
+        </div>
       </div>
-      <div class="demo-row-label">Quick starts</div>
-      <div class="demo-suggests">
-        <button class="demo-suggest" data-brief="luxury electric SUV for London families">EV · London</button>
-        <button class="demo-suggest" data-brief="sustainable running trainers for Gen Z athletes">Trainers · Gen Z</button>
-        <button class="demo-suggest" data-brief="Spotify Premium for busy professionals who commute">Spotify · commuters</button>
-        <button class="demo-suggest" data-brief="premium noise-cancelling headphones for open-plan offices">Sony WH · office</button>
-      </div>
+
       <button class="studio-go" id="studioRunBtn">Run Agent Pipeline →</button>
       <div class="pipeline-progress" id="pipelineProgress">
         <div class="pipeline-steps">
-          <div class="pipeline-step" id="ps0"><div class="step-dot">S0</div><div class="step-label">Intake</div></div>
-          <div class="pipeline-step" id="ps1"><div class="step-dot">S1</div><div class="step-label">Generate</div></div>
+          <div class="pipeline-step" id="ps0"><div class="step-dot">S0</div><div class="step-label">Parse</div></div>
+          <div class="pipeline-step" id="ps0b"><div class="step-dot">S0b</div><div class="step-label">Emotion</div></div>
+          <div class="pipeline-step" id="ps1"><div class="step-dot">S1</div><div class="step-label">Concept</div></div>
           <div class="pipeline-step" id="psE"><div class="step-dot">⚡</div><div class="step-label">Eval</div></div>
           <div class="pipeline-step" id="ps2"><div class="step-dot">S2</div><div class="step-label">Refine</div></div>
           <div class="pipeline-step" id="ps3"><div class="step-dot">S3</div><div class="step-label">Format</div></div>
@@ -242,20 +269,24 @@
         <div class="pipeline-status-line" id="pipelineStatus">Initialising…</div>
       </div>
       <div class="studio-results" id="studioResults">
+        <div class="studio-result-section" id="emotionRationaleSection" style="display:none">
+          <div class="studio-section-label">AI Emotion Choice</div>
+          <div class="emotion-rationale-box" id="emotionRationaleBox"></div>
+        </div>
         <div class="studio-result-section">
-          <div class="studio-section-label">Initial Draft — S1</div>
+          <div class="studio-section-label">Initial Draft</div>
           <div class="ad-card" id="initialDraftCard"></div>
         </div>
         <div class="studio-result-section" id="evalSection" style="display:none">
           <div class="studio-section-label">RoBERTa Eval + Saliency</div>
           <div class="eval-grid" id="evalGrid"></div>
           <div class="saliency-block" id="saliencyBlock" style="display:none">
-            <div class="saliency-label">Gradient Feedback → S2</div>
+            <div class="saliency-label">Gradient Feedback → Refine</div>
             <div class="saliency-text" id="saliencyText"></div>
           </div>
         </div>
         <div class="studio-result-section">
-          <div class="studio-section-label">Final Ad — S3</div>
+          <div class="studio-section-label">Final Ad</div>
           <div class="final-badge">Refined ✓</div>
           <div class="ad-card" id="finalDraftCard"></div>
         </div>

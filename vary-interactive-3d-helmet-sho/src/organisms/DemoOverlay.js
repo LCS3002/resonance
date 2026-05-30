@@ -104,10 +104,10 @@ export function initDemoOverlay() {
     if (e.key === 'Escape' && overlay.classList.contains('open')) overlay.classList.remove('open');
   });
 
-  let selectedEmotion = '';
-  document.querySelectorAll('.emotion-chip').forEach(chip => {
+  let selectedEmotion = 'infer';
+  document.querySelectorAll('#demoEmotionChips .emotion-chip').forEach(chip => {
     chip.addEventListener('click', () => {
-      document.querySelectorAll('.emotion-chip').forEach(c => c.classList.remove('active'));
+      document.querySelectorAll('#demoEmotionChips .emotion-chip').forEach(c => c.classList.remove('active'));
       chip.classList.add('active');
       selectedEmotion = chip.dataset.emotion;
     });
@@ -157,7 +157,7 @@ export function initDemoOverlay() {
       const res = await fetch(ENDPOINTS.campaignStream, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ brief, mode: selectedEmotion ? 'text+image' : 'text' }),
+        body: JSON.stringify({ brief, mode: 'text', target_emotion: selectedEmotion }),
       });
       if (!res.ok) throw new Error('API ' + res.status);
 
