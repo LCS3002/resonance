@@ -51,8 +51,9 @@ if _FRONTEND.exists():
 # ── Request models ─────────────────────────────────────────────────────────────
 
 class CampaignRequest(BaseModel):
-    brief: str = Field(..., min_length=5, max_length=800)
-    mode:  str = Field("text", description="text | text+image")
+    brief:          str = Field(..., min_length=5, max_length=800)
+    mode:           str = Field("text", description="text | text+image")
+    target_emotion: str = Field("", description="fomo|curiosity|fear|excitement|trust|pride|delight|infer|empty=let S0 extract")
 
 
 class VisualRequest(BaseModel):
@@ -86,7 +87,7 @@ async def campaign(req: CampaignRequest):
     → S5 format
     """
     try:
-        state = await run_agent(raw_brief=req.brief, mode=req.mode)
+        state = await run_agent(raw_brief=req.brief, mode=req.mode, target_emotion=req.target_emotion)
         return {
             "brief":          state.get("brief"),
             "concept":        state.get("concept"),
@@ -116,7 +117,7 @@ async def campaign_stream(req: CampaignRequest):
 
     async def event_stream():
         try:
-            async for event in stream_agent(raw_brief=req.brief, mode=req.mode):
+            async for event in stream_agent(raw_brief=req.brief, mode=req.mode, target_emotion=req.target_emotion):
                 yield f"data: {json.dumps(event)}\n\n"
         except Exception as e:
             logger.exception("Stream pipeline error")

@@ -18,6 +18,7 @@ from __future__ import annotations
 
 import json
 import logging
+import re
 from concurrent.futures import ThreadPoolExecutor, wait, FIRST_COMPLETED
 from typing import TypedDict
 
@@ -25,6 +26,7 @@ from langgraph.graph import END, StateGraph
 
 from .agent_tools import check_platform_constraints, image_gen
 from .claude_local import local_claude as _claude
+from .prompts.loader import render as _render
 
 logger = logging.getLogger(__name__)
 
@@ -78,18 +80,20 @@ class EvalResult(TypedDict):
 
 
 class GraphState(TypedDict):
-    raw_brief:      str
-    mode:           str             # "text" | "text+image"
-    brief:          BriefState | None
-    concept:        ConceptState | None
-    copy:           CopyDraft | None
-    image:          ImageDraft | None
-    eval:           EvalResult | None
-    refined_copy:   CopyDraft | None
-    refined_image:  ImageDraft | None
-    platform_issues: list[str]
-    iteration:      int
-    status:         str             # "running" | "done"
+    raw_brief:               str
+    mode:                    str             # "text" | "text+image"
+    target_emotion_override: str             # "" | "infer" | one of 7 valid emotions
+    brief:                   BriefState | None
+    concept:                 ConceptState | None
+    copy:                    CopyDraft | None
+    image:                   ImageDraft | None
+    eval:                    EvalResult | None
+    refined_copy:            CopyDraft | None
+    refined_image:           ImageDraft | None
+    emotion_rationale:       str | None      # set by s0b_infer when target_emotion_override="infer"
+    platform_issues:         list[str]
+    iteration:               int
+    status:                  str             # "running" | "done"
 
 
 # ── Node implementations ───────────────────────────────────────────────────────
@@ -97,51 +101,71 @@ class GraphState(TypedDict):
 def s0_parse(state: GraphState) -> dict:
     """Parse raw brief → BriefState. Haiku — fast."""
     logger.info("S0 parse — brief: %s", state["raw_brief"][:80])
+    system, user = _render("s0_parse", raw_brief=state["raw_brief"])
     resp = _claude.messages.create(
         model="claude-haiku-4-5-20251001",
-        max_tokens=400,
-        messages=[{"role": "user", "content": (
-            f"Parse this ad campaign brief into structured JSON:\n\n\"{state['raw_brief']}\"\n\n"
-            "Return ONLY valid JSON with these exact keys:\n"
-            "{\n"
-            '  "brand_name": "brand or product name (infer if not explicit)",\n'
-            '  "brand_mission": "one sentence brand purpose",\n'
-            '  "platform": "facebook|instagram|twitter|generic",\n'
-            '  "target_emotion": "aspirational|trustworthy|urgent|playful|premium",\n'
-            f'  "raw_brief": "{state["raw_brief"]}"\n'
-            "}"
-        )}],
+        max_tokens=500,
+        system=system or None,
+        messages=[{"role": "user", "content": user}],
     )
     brief = _parse_json(resp.content[0].text)
     brief.setdefault("raw_brief", state["raw_brief"])
+
+    # If the frontend sent a specific emotion (not "infer", not empty), honour it
+    override = state.get("target_emotion_override", "")
+    if override and override != "infer":
+        brief["target_emotion"] = override
+
     logger.info("S0 done — brand=%s platform=%s emotion=%s",
                 brief.get("brand_name"), brief.get("platform"), brief.get("target_emotion"))
     return {"brief": brief, "status": "running"}
+
+
+def s0b_infer(state: GraphState) -> dict:
+    """Infer the best target emotion from the brand + audience profile. Sonnet."""
+    logger.info("S0b infer — deducing target emotion for brand=%s", (state["brief"] or {}).get("brand_name"))
+    brief = state["brief"] or {}
+    system, user = _render(
+        "s0b_infer",
+        brand_name=brief.get("brand_name", ""),
+        brand_mission=brief.get("brand_mission", ""),
+        raw_brief=state["raw_brief"],
+    )
+    resp = _claude.messages.create(
+        model="claude-sonnet-4-6",
+        max_tokens=400,
+        system=system or None,
+        messages=[{"role": "user", "content": user}],
+    )
+    result = _parse_json(resp.content[0].text)
+    emotion   = result.get("emotion", "")
+    rationale = result.get("rationale", "")
+    if emotion:
+        brief = {**brief, "target_emotion": emotion}
+    logger.info("S0b done — inferred_emotion=%s", emotion)
+    return {"brief": brief, "emotion_rationale": rationale}
+
+
+def _route_after_s0(state: GraphState) -> str:
+    """Route to s0b_infer if emotion inference was requested, else straight to s1_concept."""
+    return "s0b_infer" if state.get("target_emotion_override") == "infer" else "s1_concept"
 
 
 def s1_concept(state: GraphState) -> dict:
     """Generate the creative concept anchor. Sonnet — quality matters here."""
     logger.info("S1 concept — target_emotion=%s", (state["brief"] or {}).get("target_emotion"))
     brief = state["brief"] or {}
+    system, user = _render(
+        "s1_concept",
+        raw_brief=state["raw_brief"],
+        brand_name=brief.get("brand_name", ""),
+        target_emotion=brief.get("target_emotion", ""),
+    )
     resp = _claude.messages.create(
         model="claude-sonnet-4-6",
-        max_tokens=300,
-        system=(
-            "You are a creative director. Distil a campaign brief into a tight creative concept "
-            "that will govern both ad copy and visuals. The concept is the invariant — "
-            "copy and images are both expressions of it."
-        ),
-        messages=[{"role": "user", "content": (
-            f"Brief: {state['raw_brief']}\n"
-            f"Brand: {brief.get('brand_name', '')}\n"
-            f"Target emotion: {brief.get('target_emotion', '')}\n\n"
-            "Return ONLY valid JSON:\n"
-            "{\n"
-            '  "emotional_core": "one sentence — the feeling this ad should leave the viewer with",\n'
-            '  "visual_metaphor": "concrete visual anchor, e.g. open road at golden hour",\n'
-            '  "tone": "2-4 words describing the voice and register"\n'
-            "}"
-        )}],
+        max_tokens=500,
+        system=system or None,
+        messages=[{"role": "user", "content": user}],
     )
     concept = _parse_json(resp.content[0].text)
     logger.info("S1 done — core=%s", concept.get("emotional_core", "")[:60])
@@ -153,22 +177,19 @@ def s2a_copy(state: GraphState) -> dict:
     logger.info("S2a copy — generating headline/body/cta")
     brief   = state["brief"] or {}
     concept = state["concept"] or {}
-
+    system, user = _render(
+        "s2a_copy",
+        emotional_core=concept.get("emotional_core", ""),
+        tone=concept.get("tone", ""),
+        brand_name=brief.get("brand_name", ""),
+        platform=brief.get("platform", "generic"),
+        target_emotion=brief.get("target_emotion", ""),
+    )
     resp = _claude.messages.create(
         model="claude-sonnet-4-6",
         max_tokens=400,
-        system="You are an expert ad copywriter. No exclamation marks. No clichés.",
-        messages=[{"role": "user", "content": (
-            f"Creative concept: {concept.get('emotional_core', '')}\n"
-            f"Tone: {concept.get('tone', '')}\n"
-            f"Brand: {brief.get('brand_name', '')}\n"
-            f"Platform: {brief.get('platform', 'generic')}\n"
-            f"Target emotion: {brief.get('target_emotion', '')}\n\n"
-            "Write ONE ad variant. Return ONLY JSON:\n"
-            '{"headline": "6-10 words, active verb", '
-            '"body": "15-25 words, one specific benefit, conversational", '
-            '"cta": "2-4 words, imperative"}'
-        )}],
+        system=system or None,
+        messages=[{"role": "user", "content": user}],
     )
     copy = _parse_json(resp.content[0].text)
     logger.info("S2a done — headline=%s", copy.get("headline", "")[:50])
@@ -182,17 +203,17 @@ def s2b_image(state: GraphState) -> dict:
     concept = state["concept"] or {}
     mode    = state.get("mode", "text")
 
+    system, user = _render(
+        "s2b_image",
+        emotional_core=concept.get("emotional_core", ""),
+        visual_metaphor=concept.get("visual_metaphor", ""),
+        target_emotion=brief.get("target_emotion", ""),
+    )
     resp = _claude.messages.create(
         model="claude-haiku-4-5-20251001",
-        max_tokens=200,
-        messages=[{"role": "user", "content": (
-            f"Creative concept: {concept.get('emotional_core', '')}\n"
-            f"Visual metaphor: {concept.get('visual_metaphor', '')}\n"
-            f"Target emotion: {brief.get('target_emotion', '')}\n\n"
-            "Write a vivid image_prompt (1-2 sentences, no text in image). "
-            "Return ONLY JSON:\n"
-            '{"image_prompt": "..."}'
-        )}],
+        max_tokens=300,
+        system=system or None,
+        messages=[{"role": "user", "content": user}],
     )
     image_prompt = _parse_json(resp.content[0].text).get("image_prompt", "")
 
@@ -290,26 +311,22 @@ def s4a_refine_copy(state: GraphState) -> dict:
     copy     = state["copy"] or {}
     feedback = (state["eval"] or {}).get("combined_feedback", "")
 
+    system, user = _render(
+        "s4a_refine_copy",
+        emotional_core=concept.get("emotional_core", ""),
+        tone=concept.get("tone", ""),
+        brand_name=brief.get("brand_name", ""),
+        platform=brief.get("platform", "generic"),
+        prev_headline=copy.get("headline", ""),
+        prev_body=copy.get("body", ""),
+        prev_cta=copy.get("cta", ""),
+        feedback=feedback[:800],
+    )
     resp = _claude.messages.create(
         model="claude-sonnet-4-6",
         max_tokens=400,
-        system=(
-            "You are an expert ad copywriter. Revise copy based on emotion feedback. "
-            "The creative concept is the hard constraint — keep it. Change only framing."
-        ),
-        messages=[{"role": "user", "content": (
-            f"Creative concept (DO NOT change this): {concept.get('emotional_core', '')}\n"
-            f"Tone: {concept.get('tone', '')}\n"
-            f"Brand: {brief.get('brand_name', '')}\n"
-            f"Platform: {brief.get('platform', 'generic')}\n\n"
-            f"Previous copy:\n"
-            f"  Headline: {copy.get('headline', '')}\n"
-            f"  Body: {copy.get('body', '')}\n"
-            f"  CTA: {copy.get('cta', '')}\n\n"
-            f"Emotion feedback:\n{feedback[:800]}\n\n"
-            "Rewrite. Return ONLY JSON:\n"
-            '{"headline": "...", "body": "...", "cta": "..."}'
-        )}],
+        system=system or None,
+        messages=[{"role": "user", "content": user}],
     )
     refined = _parse_json(resp.content[0].text)
     logger.info("S4a done — headline=%s", refined.get("headline", "")[:50])
@@ -325,19 +342,19 @@ def s4b_refine_image(state: GraphState) -> dict:
     feedback = (state["eval"] or {}).get("combined_feedback", "")
     mode     = state.get("mode", "text")
 
+    system, user = _render(
+        "s4b_refine_image",
+        emotional_core=concept.get("emotional_core", ""),
+        visual_metaphor=concept.get("visual_metaphor", ""),
+        target_emotion=brief.get("target_emotion", ""),
+        prev_image_prompt=image.get("image_prompt", ""),
+        feedback=feedback[:400],
+    )
     resp = _claude.messages.create(
         model="claude-haiku-4-5-20251001",
-        max_tokens=200,
-        messages=[{"role": "user", "content": (
-            f"Creative concept (DO NOT change this): {concept.get('emotional_core', '')}\n"
-            f"Visual metaphor: {concept.get('visual_metaphor', '')}\n"
-            f"Target emotion: {brief.get('target_emotion', '')}\n\n"
-            f"Previous image_prompt: {image.get('image_prompt', '')}\n\n"
-            f"Emotion feedback:\n{feedback[:400]}\n\n"
-            "Revise the image_prompt to better hit the target emotion. "
-            "Keep the visual metaphor. Return ONLY JSON:\n"
-            '{"image_prompt": "..."}'
-        )}],
+        max_tokens=300,
+        system=system or None,
+        messages=[{"role": "user", "content": user}],
     )
     new_prompt = _parse_json(resp.content[0].text).get("image_prompt", image.get("image_prompt", ""))
 
@@ -368,16 +385,18 @@ def s5_format(state: GraphState) -> dict:
 
     if issues:
         constraint_str = "; ".join(issues)
+        system, user = _render(
+            "s5_format",
+            constraint_str=constraint_str,
+            headline=final_copy.get("headline", ""),
+            body=final_copy.get("body", ""),
+            cta=final_copy.get("cta", ""),
+        )
         resp = _claude.messages.create(
             model="claude-haiku-4-5-20251001",
             max_tokens=300,
-            messages=[{"role": "user", "content": (
-                f"Trim this ad copy to fix: {constraint_str}\n\n"
-                f"Headline: {final_copy.get('headline', '')}\n"
-                f"Body: {final_copy.get('body', '')}\n"
-                f"CTA: {final_copy.get('cta', '')}\n\n"
-                'Return ONLY JSON: {"headline": "...", "body": "...", "cta": "..."}'
-            )}],
+            system=system or None,
+            messages=[{"role": "user", "content": user}],
         )
         trimmed   = _parse_json(resp.content[0].text)
         final_copy = {**final_copy, **trimmed}
@@ -418,14 +437,19 @@ def s4_parallel(state: GraphState) -> dict:
 def _build_graph():
     g = StateGraph(GraphState)
     g.add_node("s0_parse",    s0_parse)
+    g.add_node("s0b_infer",   s0b_infer)
     g.add_node("s1_concept",  s1_concept)
-    g.add_node("s2_parallel", s2_parallel)   # copy + image in parallel
+    g.add_node("s2_parallel", s2_parallel)
     g.add_node("s3_eval",     s3_eval)
-    g.add_node("s4_parallel", s4_parallel)   # refine copy + image in parallel
+    g.add_node("s4_parallel", s4_parallel)
     g.add_node("s5_format",   s5_format)
 
     g.set_entry_point("s0_parse")
-    g.add_edge("s0_parse",    "s1_concept")
+    g.add_conditional_edges("s0_parse", _route_after_s0, {
+        "s0b_infer":  "s0b_infer",
+        "s1_concept": "s1_concept",
+    })
+    g.add_edge("s0b_infer",   "s1_concept")
     g.add_edge("s1_concept",  "s2_parallel")
     g.add_edge("s2_parallel", "s3_eval")
     g.add_edge("s3_eval",     "s4_parallel")
@@ -439,26 +463,29 @@ _graph = _build_graph()
 
 # ── Public API ─────────────────────────────────────────────────────────────────
 
-def _initial_state(raw_brief: str, mode: str) -> GraphState:
+def _initial_state(raw_brief: str, mode: str, target_emotion: str = "") -> GraphState:
     return {
-        "raw_brief":      raw_brief,
-        "mode":           mode,
-        "brief":          None,
-        "concept":        None,
-        "copy":           None,
-        "image":          None,
-        "eval":           None,
-        "refined_copy":   None,
-        "refined_image":  None,
-        "platform_issues": [],
-        "iteration":      0,
-        "status":         "running",
+        "raw_brief":               raw_brief,
+        "mode":                    mode,
+        "target_emotion_override": target_emotion,
+        "brief":                   None,
+        "concept":                 None,
+        "copy":                    None,
+        "image":                   None,
+        "eval":                    None,
+        "refined_copy":            None,
+        "refined_image":           None,
+        "emotion_rationale":       None,
+        "platform_issues":         [],
+        "iteration":               0,
+        "status":                  "running",
     }
 
 
 # Human-readable labels for each node — sent to the frontend
 _NODE_LABELS: dict[str, str] = {
     "s0_parse":    "Parsing brief",
+    "s0b_infer":   "Inferring target emotion",
     "s1_concept":  "Building creative concept",
     "s2_parallel": "Generating initial copy + image",
     "s3_eval":     "Evaluating emotions + gradients",
@@ -469,6 +496,7 @@ _NODE_LABELS: dict[str, str] = {
 # Keys from each node's output that are worth sending to the frontend
 _NODE_FIELDS: dict[str, list[str]] = {
     "s0_parse":    ["brief"],
+    "s0b_infer":   ["brief", "emotion_rationale"],
     "s1_concept":  ["concept"],
     "s2_parallel": ["copy", "image"],
     "s3_eval":     ["eval"],
@@ -477,13 +505,13 @@ _NODE_FIELDS: dict[str, list[str]] = {
 }
 
 
-async def stream_agent(raw_brief: str, mode: str = "text"):
+async def stream_agent(raw_brief: str, mode: str = "text", target_emotion: str = ""):
     """Async generator — yields one SSE-ready dict per node that completes.
 
     Each dict: { type, node, label, data }
     Final dict: { type: "done", data: <full final state> }
     """
-    initial = _initial_state(raw_brief, mode)
+    initial = _initial_state(raw_brief, mode, target_emotion)
     final_state = initial.copy()
 
     async for chunk in _graph.astream(initial, stream_mode="updates"):
@@ -501,19 +529,26 @@ async def stream_agent(raw_brief: str, mode: str = "text"):
     yield {"type": "done", "data": final_state}
 
 
-async def run_agent(raw_brief: str, mode: str = "text") -> GraphState:
-    """Run the full S0→S1→S2→S3→S4→S5 pipeline. Returns final GraphState."""
-    return await _graph.ainvoke(_initial_state(raw_brief, mode))
+async def run_agent(raw_brief: str, mode: str = "text", target_emotion: str = "") -> GraphState:
+    """Run the full S0→[S0b]→S1→S2→S3→S4→S5 pipeline. Returns final GraphState."""
+    return await _graph.ainvoke(_initial_state(raw_brief, mode, target_emotion))
 
 
 # ── Helpers ────────────────────────────────────────────────────────────────────
 
 def _parse_json(text: str) -> dict:
     raw = text.strip()
-    if raw.startswith("```"):
-        raw = raw.split("```")[1].lstrip("json").strip()
+    # Extract from ```json fences first
+    fence = re.search(r"```(?:json)?\s*([\s\S]*?)```", raw)
+    if fence:
+        raw = fence.group(1).strip()
+    else:
+        # Find the outermost JSON object — handles preamble / chain-of-thought before the JSON
+        obj = re.search(r"\{[\s\S]*\}", raw)
+        if obj:
+            raw = obj.group(0)
     try:
         return json.loads(raw)
     except json.JSONDecodeError:
-        logger.warning(f"Non-JSON response (first 120): {raw[:120]}")
+        logger.warning("Non-JSON response (first 200): %s", raw[:200])
         return {}
